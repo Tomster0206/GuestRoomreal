@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>酒店管理系统 - 房间预订</title>
+    <link rel="stylesheet" href="../static/element-ui/index.css">
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/element-ui/index.js"></script>
+    <style>
+        .page-container {
+            padding: 20px;
+            background-color: #f0f2f5;
+            min-height: calc(100vh - 120px);
+            box-sizing: border-box;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1f2f3d;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .page-title i {
+            margin-right: 15px;
+            font-size: 32px;
+            color: #409EFF;
+            background: linear-gradient(135deg, #409EFF 0%, #36a8ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .search-bar {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .search-bar .el-form-item {
+            margin-bottom: 0;
+            margin-right: 20px;
+        }
+
+        .search-bar .el-form-item__label {
+            font-weight: 500;
+            color: #1f2f3d;
+        }
+
+        .search-bar .el-input__inner {
+            height: 44px;
+            line-height: 44px;
+            border-radius: 8px;
+            border: 1px solid #dcdfe6;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar .el-input__inner:hover {
+            border-color: #409EFF;
+        }
+
+        .search-bar .el-input__inner:focus {
+            border-color: #409EFF;
+            box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+        }
+
+        .search-bar .el-button {
+            height: 44px;
+            padding: 0 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar .el-button--primary {
+            background: linear-gradient(135deg, #409EFF 0%, #36a8ff 100%);
+            border: none;
+            box-shadow: 0 2px 6px rgba(64, 158, 255, 0.3);
+        }
+
+        .search-bar .el-button--primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
+        }
+
+        .room-table {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .el-table {
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .el-table th {
+            background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%) !important;
+            color: #1f2f3d;
+            font-weight: 600;
+            padding: 16px 0;
+            font-size: 14px;
+        }
+
+        .el-table td {
+            padding: 16px 0;
+        }
+
+        .el-table__row {
+            transition: all 0.3s ease;
+        }
+
+        .el-table__row:hover {
+            transform: translateX(5px);
+            background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%) !important;
+        }
+
+        .room-number {
+            font-weight: 600;
+            color: #1890ff;
+            margin-right: 8px;
+        }
+
+        .room-price {
+            color: #f56c6c;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .book-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #409EFF 0%, #36a8ff 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .book-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
+        }
+
+        .pagination-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            text-align: right;
+        }
+
+        .el-tag {
+            border-radius: 4px;
+            padding: 0 12px;
+            height: 28px;
+            line-height: 26px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="page-container">
+            <div class="page-title">
+                <i class="el-icon-date"></i>
+                房间预订
+            </div>
+
+            <div class="search-bar">
+                <el-form :inline="true" :model="searchForm" class="search-form">
+                    <el-form-item label="入住时间">
+                        <el-date-picker
+                            v-model="searchForm.checkInTime"
+                            type="datetime"
+                            placeholder="选择入住时间"
+                            value-format="yyyy-MM-dd HH:mm:ss"
+                            @change="handleTimeChange">
+                        </el-date-picker>
+                    </el-form-item>
+                    <el-form-item label="退房时间">
+                        <el-date-picker
+                            v-model="searchForm.checkOutTime"
+                            type="datetime"
+                            placeholder="选择退房时间"
+                            value-format="yyyy-MM-dd HH:mm:ss"
+                            @change="handleTimeChange">
+                        </el-date-picker>
+                    </el-form-item>
+                    <el-form-item label="排序方式">
+                        <el-select v-model="searchForm.sortType" placeholder="选择排序方式" @change="searchRooms">
+                            <el-option label="推荐优先" value="RECOMMEND"></el-option>
+                            <el-option label="价格从低到高" value="PRICE_ASC"></el-option>
+                            <el-option label="价格从高到低" value="PRICE_DESC"></el-option>
+                            <el-option label="面积从大到小" value="AREA_DESC"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="searchRooms" icon="el-icon-search">搜索</el-button>
+                        <el-button @click="resetSearch" icon="el-icon-refresh">重置</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+
+            <div class="room-table" v-loading="loading">
+                <el-table :data="rooms" style="width: 100%">
+                    <el-table-column prop="roomNumber" label="房间号" width="120" align="center">
+                        <template slot-scope="scope">
+                            <span class="room-number">{{scope.row.roomNumber}}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="roomType" label="房间类型" width="150" align="center">
+                        <template slot-scope="scope">
+                            <el-tag :type="getRoomTypeTag(scope.row.roomType)">
+                                {{getRoomTypeLabel(scope.row.roomType)}}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="maxGuests" label="可住人数" width="120" align="center">
+                        <template slot-scope="scope">
+                            <span>{{scope.row.maxGuests}}人</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="floor" label="楼层" width="100" align="center">
+                        <template slot-scope="scope">
+                            <span>{{scope.row.floor}}层</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="area" label="面积" width="120" align="center">
+                        <template slot-scope="scope">
+                            <span>{{scope.row.area}}㎡</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="price" label="价格" width="150" align="center">
+                        <template slot-scope="scope">
+                            <span class="room-price">¥{{scope.row.price}}/晚</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="description" label="房间描述" min-width="200" show-overflow-tooltip>
+                        <template slot-scope="scope">
+                            <span>{{scope.row.description}}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="操作" width="120" align="center">
+                        <template slot-scope="scope">
+                            <el-button 
+                                type="primary" 
+                                size="small"
+                                class="book-btn"
+                                @click="handleBooking(scope.row)">
+                                立即预订
+                            </el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+
+                <div class="pagination-container">
+                    <el-pagination
+                        @size-change="handleSizeChange"
+                        @current-change="handleCurrentChange"
+                        :current-page="searchForm.pageNum"
+                        :page-sizes="[10, 20, 30, 50]"
+                        :page-size="searchForm.pageSize"
+                        layout="total, sizes, prev, pager, next, jumper"
+                        :total="total"
+                        background>
+                    </el-pagination>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    searchForm: {
+                        checkInTime: '',
+                        checkOutTime: '',
+                        sortType: 'RECOMMEND',
+                        pageNum: 1,
+                        pageSize: 10
+                    },
+                    rooms: [],
+                    total: 0,
+                    loading: false,
+                    userInfo: null
+                }
+            },
+            created() {
+                // 初始化默认时间
+                const now = new Date();
+                const tomorrow = new Date(now);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+
+                // 设置默认的入住时间为今天14:00
+                const checkIn = new Date(now);
+                checkIn.setHours(14, 0, 0, 0);
+
+                // 设置默认的退房时间为明天12:00
+                const checkOut = new Date(tomorrow);
+                checkOut.setHours(12, 0, 0, 0);
+
+                this.searchForm.checkInTime = this.formatDateTime(checkIn);
+                this.searchForm.checkOutTime = this.formatDateTime(checkOut);
+                
+                // 获取用户信息
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (userInfoStr) {
+                    try {
+                        this.userInfo = JSON.parse(userInfoStr);
+                    } catch (e) {
+                        console.error('解析用户信息失败:', e);
+                        this.userInfo = null;
+                    }
+                }
+                
+                // 加载房间列表
+                this.searchRooms();
+            },
+            methods: {
+                formatDateTime(date) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const seconds = String(date.getSeconds()).padStart(2, '0');
+                    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+                },
+                searchRooms() {
+                    if (!this.searchForm.checkInTime || !this.searchForm.checkOutTime) {
+                        this.$message.warning('请选择入住和退房时间');
+                        return;
+                    }
+
+                    this.loading = true;
+                    axios.get('/api/rooms/recommend', {
+                        params: {
+                            checkInTime: this.searchForm.checkInTime,
+                            checkOutTime: this.searchForm.checkOutTime,
+                            sortType: this.searchForm.sortType,
+                            pageNum: this.searchForm.pageNum,
+                            pageSize: this.searchForm.pageSize
+                        }
+                    }).then(res => {
+                        if (res.data.code === 200) {
+                            this.rooms = res.data.data.records || [];
+                            this.total = res.data.data.total || 0;
+                            
+                            // 根据不同排序类型显示不同提示
+                            let message = '';
+                            switch(this.searchForm.sortType) {
+                                case 'RECOMMEND':
+                                    message = '已为您推荐最适合的房间';
+                                    break;
+                                case 'PRICE_ASC':
+                                    message = '已按价格从低到高为您排序';
+                                    break;
+                                case 'PRICE_DESC':
+                                    message = '已按价格从高到低为您排序';
+                                    break;
+                                case 'AREA_DESC':
+                                    message = '已按面积从大到小为您排序';
+                                    break;
+                            }
+                            this.$message.success(message);
+                        } else {
+                            this.$message.error(res.data.message || '获取房间列表失败');
+                        }
+                        this.loading = false;
+                    }).catch(() => {
+                        this.loading = false;
+                        this.$message.error('获取房间列表失败');
+                    });
+                },
+                resetSearch() {
+                    const now = new Date();
+                    const tomorrow = new Date(now);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+
+                    const checkIn = new Date(now);
+                    checkIn.setHours(14, 0, 0, 0);
+
+                    const checkOut = new Date(tomorrow);
+                    checkOut.setHours(12, 0, 0, 0);
+
+                    this.searchForm = {
+                        checkInTime: this.formatDateTime(checkIn),
+                        checkOutTime: this.formatDateTime(checkOut),
+                        sortType: 'RECOMMEND',
+                        pageNum: 1,
+                        pageSize: 10
+                    };
+                    this.searchRooms();
+                },
+                handleTimeChange() {
+                    if (this.searchForm.checkInTime && this.searchForm.checkOutTime) {
+                        const checkIn = new Date(this.searchForm.checkInTime);
+                        const checkOut = new Date(this.searchForm.checkOutTime);
+                        if (checkOut <= checkIn) {
+                            this.$message.warning('退房时间必须晚于入住时间');
+                            return;
+                        }
+                        this.searchRooms();
+                    }
+                },
+                handleSizeChange(val) {
+                    this.searchForm.pageSize = val;
+                    this.searchRooms();
+                },
+                handleCurrentChange(val) {
+                    this.searchForm.pageNum = val;
+                    this.searchRooms();
+                },
+                handleBooking(room) {
+                    console.log(this.userInfo);
+                    if (!this.userInfo || !this.userInfo.id) {
+                        this.$message.warning('请先登录');
+                        return;
+                    }
+
+                    const checkIn = new Date(this.searchForm.checkInTime);
+                    const checkOut = new Date(this.searchForm.checkOutTime);
+                    const diffTime = Math.abs(checkOut - checkIn);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    // 创建预订确认对话框
+                    this.$confirm(`确认预订该房间？
+房间号：${room.roomNumber}
+房间类型：${this.getRoomTypeLabel(room.roomType)}
+入住时间：${this.searchForm.checkInTime}
+退房时间：${this.searchForm.checkOutTime}
+住宿天数：${diffDays}天
+房费：¥${room.price * diffDays}
+押金：¥100`, '预订确认', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        const bookingData = {
+                            roomId: room.roomNumber,
+                            customerId: this.userInfo.id,
+                            checkInTime: this.searchForm.checkInTime,
+                            checkOutTime: this.searchForm.checkOutTime,
+                            totalPrice: room.price * diffDays,
+                            deposit: 100,
+                            paymentMethod: 'CASH',
+                            paymentStatus: 'UNPAID',
+                            remark: '',
+                            status: 'PENDING'
+                        };
+
+                        // 发送预订请求
+                        return axios.post('/api/bookings/add', bookingData);
+                    }).then(res => {
+                        if (res.data.code === 200) {
+                            this.$message.success('预订成功');
+                            this.searchRooms(); // 刷新房间列表
+                        } else {
+                            this.$message.error(res.data.message || '预订失败');
+                        }
+                    }).catch(err => {
+                        if (err !== 'cancel') {
+                            this.$message.error('预订失败，请稍后重试');
+                        }
+                    });
+                },
+                getRoomTypeTag(type) {
+                    const map = {
+                        'STANDARD': 'success',
+                        'DELUXE': 'warning',
+                        'SUITE': 'danger'
+                    };
+                    return map[type] || '';
+                },
+                getRoomTypeLabel(type) {
+                    const map = {
+                        'STANDARD': '标准间',
+                        'DELUXE': '豪华间',
+                        'SUITE': '套房'
+                    };
+                    return map[type] || '其他';
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

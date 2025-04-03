@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>酒店管理系统 - 预订管理</title>
+    <link rel="stylesheet" href="../static/element-ui/index.css">
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/element-ui/index.js"></script>
+    <style>
+        /* 页面容器样式 */
+        .page-container {
+            padding: 20px;
+            background-color: #f0f2f5;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* 页面标题样式 */
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2f3d;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title i {
+            margin-right: 12px;
+            font-size: 28px;
+            color: #409EFF;
+            background: linear-gradient(135deg, #409EFF 0%, #36a8ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 搜索栏样式优化 */
+        .search-bar {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .search-bar:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .search-bar .el-form-item {
+            margin-bottom: 0;
+            margin-right: 16px;
+        }
+
+        .search-bar .el-input__inner {
+            height: 40px;
+            line-height: 40px;
+            border-radius: 20px;
+            padding-left: 45px;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar .el-input__prefix {
+            left: 15px;
+        }
+
+        .search-bar .el-input__icon {
+            line-height: 40px;
+            color: #909399;
+        }
+
+        .search-bar .el-button {
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        /* 预订表格容器样式 */
+        .booking-table {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .booking-table:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 表格样式优化 */
+        .el-table {
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .el-table th {
+            background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%) !important;
+            color: #1f2f3d;
+            font-weight: 600;
+            padding: 16px 0;
+            font-size: 14px;
+        }
+
+        .el-table td {
+            padding: 16px 0;
+        }
+
+        .el-table__row {
+            transition: all 0.3s ease;
+        }
+
+        .el-table__row:hover {
+            transform: translateX(5px);
+            background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%) !important;
+        }
+
+        /* 按钮样式优化 */
+        .el-button {
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .el-button--primary {
+            background: linear-gradient(135deg, #1890ff 0%, #36a8ff 100%);
+            border: none;
+            box-shadow: 0 2px 6px rgba(24, 144, 255, 0.2);
+        }
+
+        .el-button--primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+
+        .el-button--success {
+            background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+            border: none;
+            box-shadow: 0 2px 6px rgba(82, 196, 26, 0.2);
+        }
+
+        .el-button--success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+        }
+
+        /* 分页样式优化 */
+        .el-pagination {
+            margin-top: 32px;
+            padding: 0;
+            text-align: right;
+        }
+
+        .el-pagination button {
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            margin: 0 4px;
+        }
+
+        .el-pagination .el-pager li {
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            margin: 0 4px;
+        }
+
+        .el-pagination .el-pager li.active {
+            background: linear-gradient(135deg, #1890ff 0%, #36a8ff 100%);
+            box-shadow: 0 2px 6px rgba(24, 144, 255, 0.2);
+        }
+
+        /* 时间显示样式 */
+        .time-cell {
+            color: #1f2f3d;
+            font-weight: 500;
+        }
+
+        .time-cell.empty {
+            color: #909399;
+            font-style: italic;
+        }
+
+        /* 房间信息样式 */
+        .room-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .room-number {
+            font-weight: 600;
+            color: #1890ff;
+            margin-right: 8px;
+        }
+
+        .room-name {
+            color: #666;
+        }
+
+        /* 操作按钮样式 */
+        .operation-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .operation-buttons .el-button {
+            padding: 8px 16px;
+        }
+
+        /* 详情弹窗样式优化 */
+        .booking-detail-dialog .el-dialog__body {
+            padding: 0;
+        }
+
+        .basic-info {
+            background: linear-gradient(135deg, #f0f2f5 0%, #e6e9ed 100%);
+            padding: 20px;
+            border-bottom: 1px solid #ebeef5;
+        }
+
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .order-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2f3d;
+        }
+
+        .info-time {
+            display: flex;
+            gap: 20px;
+            color: #909399;
+            font-size: 13px;
+        }
+
+        .detail-container {
+            padding: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .detail-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .detail-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .detail-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 15px;
+            border-bottom: 1px solid #ebeef5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-header i {
+            font-size: 20px;
+            color: #409EFF;
+        }
+
+        .card-header span {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2f3d;
+        }
+
+        .card-content {
+            padding: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ebeef5;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            width: 100px;
+            color: #909399;
+            font-size: 14px;
+        }
+
+        .info-value {
+            flex: 1;
+            color: #1f2f3d;
+            font-weight: 500;
+        }
+
+        .info-value.highlight {
+            color: #409EFF;
+            font-size: 16px;
+        }
+
+        .price-summary {
+            padding: 15px;
+        }
+
+        .price-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .price-item {
+            flex: 1;
+            min-width: 150px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .price-label {
+            color: #909399;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .price-value {
+            color: #f56c6c;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .remark-content {
+            padding: 15px;
+            color: #606266;
+            line-height: 1.6;
+            min-height: 60px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin: 15px;
+        }
+
+        .el-tag {
+            border-radius: 4px;
+            padding: 0 12px;
+            height: 28px;
+            line-height: 28px;
+            font-size: 14px;
+        }
+
+        .dialog-footer {
+            border-top: 1px solid #ebeef5;
+            padding: 15px 20px;
+            text-align: right;
+            background: #f8f9fa;
+        }
+
+        .dialog-footer .el-button {
+            padding: 10px 24px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="page-container">
+        <div class="page-title">
+            <i class="el-icon-s-order"></i>
+            预订管理
+        </div>
+
+        <div class="search-bar">
+            <el-form :inline="true" class="demo-form-inline">
+                <el-form-item>
+                    <el-input v-model="searchData.name" placeholder="请输入客户名称" clearable>
+                        <i slot="prefix" class="el-icon-search"></i>
+                    </el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="onSubmit" icon="el-icon-search">查询</el-button>
+                    <el-button @click="resetSearch" icon="el-icon-refresh">重置</el-button>
+                    <el-button type="success" @click="addShow" icon="el-icon-plus">新增预定</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+
+        <div class="booking-table">
+            <el-table
+                    :data="tableData"
+                    style="width: 100%"
+                    v-loading="loading">
+                <el-table-column
+                        show-overflow-tooltip
+                        align="center"
+                        label="序号"
+                        type="index"
+                        width="80">
+                </el-table-column>
+                <el-table-column
+                        prop="customerName"
+                        label="客户名称"
+                        show-overflow-tooltip
+                        align="center">
+                    <template slot-scope="scope">
+                        <span style="font-weight: 500; color: #1f2f3d;">{{scope.row.customerName}}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        label="房间编号"
+                        align="center">
+                    <template slot-scope="scope">
+                        <div class="room-info">
+                            <span class="room-number">{{scope.row.roomId}}</span>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        label="房间类型"
+                        align="center">
+                    <template slot-scope="scope">
+                        <el-tag size="mini" style="margin-left: 8px;"
+                        :type="getRoomTypeTag(scope.row.roomType)">{{ getRoomTypeLabel(scope.row.roomType)
+                    }}
+                </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        prop="checkInTime"
+                        label="入住时间"
+                        show-overflow-tooltip
+                        align="center">
+                    <template slot-scope="scope">
+                        <span class="time-cell">{{scope.row.checkInTime}}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        prop="checkOutTime"
+                        label="退房时间"
+                        show-overflow-tooltip
+                        align="center">
+                    <template slot-scope="scope">
+                            <span class="time-cell" :class="{'empty': !scope.row.checkOutTime}">
+                                {{scope.row.checkOutTime || '尚未退房'}}
+                            </span>
+                    </template>
+                </el-table-column>
+                <!-- 押金 -->
+                <el-table-column
+                        prop="deposit"
+                        label="押金"
+                        show-overflow-tooltip
+                        align="center">
+                    <template slot-scope="scope">
+                        <span class="time-cell">{{scope.row.deposit}}</span>
+                    </template>
+                </el-table-column>
+                <!-- 状态 -->
+                <el-table-column
+                        prop="status"
+                        label="状态"
+                        show-overflow-tooltip
+                        align="center">
+                    <template slot-scope="scope">
+                        <el-tag size="mini" :type="getStatusTag(scope.row.status)">{{ getStatusLabel(scope.row.status)
+                    }}
+                </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        label="操作"
+                        width="280"
+                        align="center">
+                    <template slot-scope="scope">
+                        <div class="operation-buttons">
+                            <el-button
+                                    size="small"
+                                    type="info"
+                                    @click="showDetail(scope.$index, scope.row)">
+                                详情
+                            </el-button>
+                            <el-button
+                                    v-if="scope.row.status === 'PENDING'"
+                                    size="small"
+                                    type="success"
+                                    @click="confirmBooking(scope.$index, scope.row)">
+                                确认预定
+                            </el-button>
+                            <el-button
+                                    v-if="scope.row.status === 'PENDING'"
+                                    size="small"
+                                    type="danger"
+                                    @click="cancelBooking(scope.$index, scope.row)">
+                                取消预定
+                            </el-button>
+                            <el-button
+                                    v-if="scope.row.status === 'CONFIRMED'"
+                                    size="small"
+                                    type="primary"
+                                    @click="tuifang(scope.$index, scope.row)">
+                                退房
+                            </el-button>
+                        </div>
+                    </template>
+                </el-table-column>
+            </el-table>
+
+            <el-pagination
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    :current-page="searchData.pageNum"
+                    :page-sizes="[5,10, 15, 20, 25]"
+                    :page-size="searchData.pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="searchData.total"
+                    background>
+            </el-pagination>
+        </div>
+    </div>
+
+    <!-- 时间选择弹窗 -->
+    <el-dialog title="选择入住时间" :visible.sync="timeDialogVisible" width="500px" :close-on-click-modal="false"
+               center>
+        <el-form :model="timeForm" label-width="100px">
+            <el-form-item label="入住时间">
+                <el-date-picker
+                        v-model="timeForm.checkInTime"
+                        type="datetime"
+                        placeholder="选择入住时间"
+                        style="width: 100%;"
+                        value-format="yyyy-MM-dd HH:mm:ss"
+                        @change="calculateNights">
+                </el-date-picker>
+            </el-form-item>
+            <el-form-item label="退房时间">
+                <el-date-picker
+                        v-model="timeForm.checkOutTime"
+                        type="datetime"
+                        placeholder="选择退房时间"
+                        style="width: 100%;"
+                        value-format="yyyy-MM-dd HH:mm:ss"
+                        @change="calculateNights">
+                </el-date-picker>
+            </el-form-item>
+            <el-form-item label="入住晚数">
+                <span style="font-size: 16px; color: #409EFF; font-weight: bold;">{{ timeForm.nights }} 晚</span>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="cancelTimeSelection" icon="el-icon-close">取 消</el-button>
+            <el-button type="primary" @click="confirmTimeSelection" icon="el-icon-check">确 定</el-button>
+        </div>
+    </el-dialog>
+
+    <!-- 预订表单弹窗 -->
+    <el-dialog title="填写预订信息" :visible.sync="dialogFormVisible" width="600px" :close-on-click-modal="false"
+               center>
+        <el-form :model="form" :rules="rules" ref="form" label-width="100px">
+            <div class="form-row">
+                <div class="form-col">
+                    <el-form-item label="客户" prop="customerId">
+                        <el-select v-model="form.customerId" placeholder="请选择客户" style="width: 100%;" filterable>
+                            <el-option
+                                    v-for="item in customerOptions"
+                                    :key="item.id"
+                                    :label="item.name"
+                                    :value="item.id">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>{{ item.name }}</span>
+                                    <span style="color: #909399; font-size: 13px">{{ item.phone }}</span>
+                                </div>
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                </div>
+                <div class="form-col">
+                    <el-form-item label="入住时间" prop="checkInTime">
+                        <el-date-picker
+                                v-model="form.checkInTime"
+                                type="datetime"
+                                placeholder="选择入住时间"
+                                style="width: 100%;"
+                                value-format="yyyy-MM-dd HH:mm:ss"
+                                @change="handleTimeChange">
+                        </el-date-picker>
+                    </el-form-item>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-col">
+                    <el-form-item label="退房时间" prop="checkOutTime">
+                        <el-date-picker
+                                v-model="form.checkOutTime"
+                                type="datetime"
+                                placeholder="选择退房时间"
+                                style="width: 100%;"
+                                value-format="yyyy-MM-dd HH:mm:ss"
+                                @change="handleTimeChange">
+                        </el-date-picker>
+                    </el-form-item>
+                </div>
+                <div class="form-col">
+                    <el-form-item label="房间" prop="roomId">
+                        <el-select v-model="form.roomId" placeholder="请选择房间" style="width: 100%;"
+                                   @change="handleRoomChange" :loading="roomsLoading">
+                            <el-option
+                                    v-for="item in roomOptions"
+                                    :key="item.roomNumber"
+                                    :label="item.roomNumber"
+                                    :value="item.roomNumber">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <span style="font-weight: 600; color: #1f2f3d;">{{ item.roomNumber }}</span>
+                                        <el-tag size="mini" style="margin-left: 8px;"
+                                                :type="getRoomTypeTag(item.roomType)">{{ getRoomTypeLabel(item.roomType)
+                                            }}
+                                        </el-tag>
+                                    </div>
+                                    <div>
+                                        <span style="color: #606266; margin-right: 8px;">
+                                            <i class="el-icon-user"></i> {{ item.maxGuests }}人
+                                        </span>
+                                        <span style="color: #f56c6c; font-weight: 500;">
+                                            ¥{{ item.price }}/天
+                                        </span>
+                                    </div>
+                                </div>
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-col">
+                    <el-form-item label="押金" prop="deposit">
+                        <el-input-number v-model="form.deposit" :min="0" :precision="2" :step="100"
+                                         style="width: 100%;"></el-input-number>
+                    </el-form-item>
+                </div>
+                <div class="form-col">
+                    <el-form-item label="支付方式" prop="paymentMethod">
+                        <el-select v-model="form.paymentMethod" placeholder="请选择支付方式" style="width: 100%;">
+                            <el-option label="现金" value="CASH"></el-option>
+                            <el-option label="微信支付" value="WECHAT"></el-option>
+                            <el-option label="支付宝" value="ALIPAY"></el-option>
+                            <el-option label="银行卡" value="BANK_CARD"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </div>
+            </div>
+
+            <el-form-item label="备注信息" prop="remark">
+                <el-input type="textarea" v-model="form.remark" :rows="2" placeholder="请输入备注信息"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogFormVisible = false" icon="el-icon-close">取 消</el-button>
+            <el-button type="primary" @click="submitForm" icon="el-icon-check">确 定</el-button>
+        </div>
+    </el-dialog>
+
+    <!-- 预订详情弹窗 -->
+    <el-dialog title="预订详情" :visible.sync="detailDialogVisible" width="1000px" :close-on-click-modal="false"
+               center custom-class="booking-detail-dialog">
+        <!-- 基本信息区域 -->
+        <div class="basic-info">
+            <div class="info-header">
+                <div class="order-number">订单号：#{{ detailData.id }}</div>
+                <div class="order-status">
+                    <el-tag size="medium" :type="getStatusTag(detailData.status)">
+                        {{ getStatusLabel(detailData.status) }}
+                    </el-tag>
+                </div>
+            </div>
+            <div class="info-time">
+                <span>创建时间：{{ detailData.createTime }}</span>
+                <span>更新时间：{{ detailData.updateTime }}</span>
+            </div>
+        </div>
+
+        <div class="detail-container">
+            <div class="detail-row">
+                <!-- 左侧列 -->
+                <div class="detail-col">
+                    <!-- 客户信息卡片 -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <i class="el-icon-user"></i>
+                            <span>客户信息</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="info-item">
+                                <div class="info-label">客户编号</div>
+                                <div class="info-value">#{{ detailData.customerId }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">客户名称</div>
+                                <div class="info-value highlight">{{ detailData.customerName }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">联系电话</div>
+                                <div class="info-value">{{ detailData.customerPhone }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 房间信息卡片 -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <i class="el-icon-house"></i>
+                            <span>房间信息</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="info-item">
+                                <div class="info-label">房间编号</div>
+                                <div class="info-value">#{{ detailData.roomId }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">房间类型</div>
+                                <div class="info-value">
+                                    <el-tag size="medium" :type="getRoomTypeTag(detailData.roomType)">
+                                        {{ getRoomTypeLabel(detailData.roomType) }}
+                                    </el-tag>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧列 -->
+                <div class="detail-col">
+                    <!-- 时间信息卡片 -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <i class="el-icon-time"></i>
+                            <span>时间信息</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="info-item">
+                                <div class="info-label">入住时间</div>
+                                <div class="info-value">{{ detailData.checkInTime }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">退房时间</div>
+                                <div class="info-value">{{ detailData.checkOutTime || '尚未退房' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 费用信息卡片 -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <i class="el-icon-money"></i>
+                            <span>费用信息</span>
+                        </div>
+                        <div class="price-summary">
+                            <div class="price-row">
+                                <div class="price-item">
+                                    <div class="price-label">总价</div>
+                                    <div class="price-value">¥{{ detailData.totalPrice }}</div>
+                                </div>
+                                <div class="price-item">
+                                    <div class="price-label">押金</div>
+                                    <div class="price-value">¥{{ detailData.deposit }}</div>
+                                </div>
+                                <div class="price-item">
+                                    <div class="price-label">房费</div>
+                                    <div class="price-value">¥{{ detailData.totalPrice - detailData.deposit }}</div>
+                                </div>
+                                <div class="price-item">
+                                    <div class="price-label">支付方式</div>
+                                    <div class="price-value">
+                                        <el-tag size="medium" type="info">{{ getPaymentMethodLabel(detailData.paymentMethod) }}</el-tag>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 备注信息卡片 -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <i class="el-icon-notebook-2"></i>
+                            <span>备注信息</span>
+                        </div>
+                        <div class="remark-content">
+                            {{ detailData.remark || '无' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="detailDialogVisible = false" icon="el-icon-close">关 闭</el-button>
+        </div>
+    </el-dialog>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        mounted() {
+            this.list();
+        },
+        data() {
+            // 时间校验规则
+            const validateTime = (rule, value, callback) => {
+                if (this.form.inTime && this.form.expectedOutTime) {
+                    const inTime = new Date(this.form.inTime);
+                    const outTime = new Date(this.form.expectedOutTime);
+                    if (outTime <= inTime) {
+                        callback(new Error('退房时间必须晚于入住时间'));
+                    } else {
+                        callback();
+                    }
+                } else {
+                    callback();
+                }
+            };
+
+            return {
+                loading: false,
+                roomsLoading: false,
+                customerOptions: [],
+                tableData: [],
+                searchData: {
+                    pageNum: 1,
+                    pageSize: 5,
+                    name: '',
+                },
+                // 时间选择弹窗
+                timeDialogVisible: false,
+                timeForm: {
+                    checkInTime: '',
+                    checkOutTime: '',
+                    nights: 0
+                },
+                // 预订表单弹窗
+                dialogFormVisible: false,
+                roomOptions: [],
+                form: {
+                    customerId: '',
+                    roomId: '',
+                    checkInTime: '',
+                    checkOutTime: '',
+                    status: 'PENDING',
+                    totalPrice: 0,
+                    deposit: 0,
+                    paymentStatus: 'UNPAID',
+                    paymentMethod: 'CASH',
+                    remark: ''
+                },
+                rules: {
+                    customerId: [
+                        {required: true, message: '请选择客户', trigger: 'change'}
+                    ],
+                    roomId: [
+                        {required: true, message: '请选择房间', trigger: 'change'}
+                    ],
+                    checkInTime: [
+                        {required: true, message: '请选择入住时间', trigger: 'change'}
+                    ],
+                    checkOutTime: [
+                        {required: true, message: '请选择退房时间', trigger: 'change'}
+                    ],
+                    deposit: [
+                        {required: true, message: '请输入押金', trigger: 'blur'}
+                    ],
+                    paymentMethod: [
+                        {required: true, message: '请选择支付方式', trigger: 'change'}
+                    ]
+                },
+                // 详情弹窗
+                detailDialogVisible: false,
+                detailData: {},
+            }
+        },
+        methods: {
+            list() {
+                this.loading = true;
+                axios.get('/api/bookings/page', {
+                    params: {
+                        pageNum: this.searchData.pageNum,
+                        pageSize: this.searchData.pageSize,
+                        name: this.searchData.name
+                    }
+                }).then(response => {
+                    if (response.data.code === 200) {
+                        this.tableData = response.data.data.records;
+                        this.searchData.total = response.data.data.total;
+                    }
+                    this.loading = false;
+                }).catch(() => {
+                    this.loading = false;
+                    this.$message.error('获取数据失败');
+                });
+            },
+            resetSearch() {
+                this.searchData.name = '';
+                this.onSubmit();
+            },
+            onSubmit() {
+                this.searchData.pageNum = 1;
+                this.list();
+            },
+            tuifang(index, row) {
+                this.$confirm('确定退房吗?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    axios.post(`/api/bookings/updateStatus/${row.id}/COMPLETED`).then(res => {
+                        if (res.data.code === 200) {
+                            this.$message.success('退房成功')
+                        } else {
+                            this.$message.error('退房失败')
+                        }
+                        this.list()
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    });
+                });
+            },
+            handleSizeChange(val) {
+                this.searchData.pageSize = val;
+                this.list();
+            },
+            handleCurrentChange(val) {
+                this.searchData.pageNum = val;
+                this.list();
+            },
+            loadRooms() {
+                if (!this.form.checkInTime || !this.form.checkOutTime) {
+                    this.$message.warning('请先选择入住和退房时间');
+                    return;
+                }
+                this.roomsLoading = true;
+
+                axios.get('/api/rooms/available', {
+                    params: {
+                        checkInTime: this.form.checkInTime,
+                        checkOutTime: this.form.checkOutTime
+                    }
+                }).then(res => {
+                    if (res.data.code === 200) {
+                        this.roomOptions = res.data.data;
+                        if (this.roomOptions.length === 0) {
+                            this.$message.warning('当前时间段没有可用房间');
+                        }
+                    } else {
+                        this.$message.error('获取可用房间失败');
+                    }
+                    this.roomsLoading = false;
+                }).catch(() => {
+                    this.roomsLoading = false;
+                    this.$message.error('获取可用房间失败');
+                });
+            },
+            loadCustomers() {
+                axios.get('/api/customers/all').then(res => {
+                    if (res.data.code === 200) {
+                        this.customerOptions = res.data.data;
+                    }
+                });
+            },
+            addShow() {
+                // 设置默认时间：今天到明天
+                const now = new Date();
+                const tomorrow = new Date(now);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+
+                // 设置默认的入住时间为今天14:00
+                const checkIn = new Date(now);
+                checkIn.setHours(14, 0, 0, 0);
+
+                // 设置默认的退房时间为明天12:00
+                const checkOut = new Date(tomorrow);
+                checkOut.setHours(12, 0, 0, 0);
+
+                this.timeForm = {
+                    checkInTime: this.formatDateTime(checkIn),
+                    checkOutTime: this.formatDateTime(checkOut),
+                    nights: 1
+                };
+
+                // 显示时间选择弹窗
+                this.timeDialogVisible = true;
+            },
+            formatDateTime(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            },
+            handleTimeChange() {
+                // 清空已选择的房间
+                this.form.roomId = '';
+                this.form.roomName = '';
+                // 重新加载可用房间
+                this.loadRooms();
+            },
+            handleRoomChange(value) {
+                this.form.roomId = value;
+            },
+            submitForm() {
+                this.$refs.form.validate((valid) => {
+                    if (valid) {
+                        axios.post('/api/bookings/add', this.form).then(res => {
+                            if (res.data.code === 200) {
+                                this.$message.success('预定成功');
+                                this.dialogFormVisible = false;
+                                this.list();
+                            } else {
+                                this.$message.error(res.data.msg);
+                            }
+                        });
+                    }
+                });
+            },
+            // 获取房间类型标签样式
+            getRoomTypeTag(type) {
+                const map = {
+                    'STANDARD': 'success',   // 绿色
+                    'DELUXE': 'warning',     // 黄色
+                    'SUITE': 'danger'        // 红色
+                };
+                return map[type] || '';
+            },
+
+            // 获取房间类型显示文本
+            getRoomTypeLabel(type) {
+                const map = {
+                    'STANDARD': '标准间',
+                    'DELUXE': '豪华间',
+                    'SUITE': '套房'
+                };
+                return map[type] || '其他';
+            },
+
+            // 获取标签样式
+            getStatusTag(status) {
+                const map = {
+                    'PENDING': 'warning',
+                    'CONFIRMED': 'success',
+                    'CANCELLED': 'danger'   
+                };
+                return map[status] || '';
+            },
+
+            // 获取状态显示文本
+            getStatusLabel(status) {
+                const map = {
+                    'PENDING': '待确认',
+                    'CONFIRMED': '已确认',
+                    'CANCELLED': '已取消',
+                    'COMPLETED': '已完成'
+                };
+                return map[status] || '其他';
+            },
+
+            // 计算入住晚数
+            calculateNights() {
+                if (this.timeForm.checkInTime && this.timeForm.checkOutTime) {
+                    const checkIn = new Date(this.timeForm.checkInTime);
+                    const checkOut = new Date(this.timeForm.checkOutTime);
+                    const diffTime = Math.abs(checkOut - checkIn);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    this.timeForm.nights = diffDays;
+                }
+            },
+
+            // 时间选择确认
+            confirmTimeSelection() {
+                if (!this.timeForm.checkInTime || !this.timeForm.checkOutTime) {
+                    this.$message.warning('请选择入住和退房时间');
+                    return;
+                }
+
+                if (this.timeForm.nights <= 0) {
+                    this.$message.warning('退房时间必须晚于入住时间');
+                    return;
+                }
+
+                // 关闭时间选择弹窗
+                this.timeDialogVisible = false;
+
+                // 加载客户列表
+                this.loadCustomers();
+
+                // 设置表单数据
+                this.form = {
+                    customerId: '',
+                    roomId: '',
+                    checkInTime: this.timeForm.checkInTime,
+                    checkOutTime: this.timeForm.checkOutTime,
+                    status: 'PENDING',
+                    totalPrice: 0,
+                    deposit: 0,
+                    paymentStatus: 'UNPAID',
+                    paymentMethod: 'CASH',
+                    remark: ''
+                };
+
+                // 显示预订表单弹窗
+                this.dialogFormVisible = true;
+
+                // 加载可用房间
+                this.loadRooms();
+            },
+
+            // 时间选择取消
+            cancelTimeSelection() {
+                this.timeDialogVisible = false;
+            },
+
+            // 确认预定
+            confirmBooking(index, row) {
+                this.$confirm('确认预定该房间吗?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    axios.post(`/api/bookings/updateStatus/${row.id}/CONFIRMED`).then(res => {
+                        if (res.data.code === 200) {
+                            this.$message.success('预定确认成功');
+                            this.list();
+                        } else {
+                            this.$message.error(res.data.msg || '预定确认失败');
+                        }
+                    }).catch(() => {
+                        this.$message.error('预定确认失败');
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    });
+                });
+            },
+
+            // 取消预定
+            cancelBooking(index, row) {
+                this.$confirm('确定取消该预定吗?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    axios.post(`/api/bookings/updateStatus/${row.id}/CANCELLED`).then(res => {
+                        if (res.data.code === 200) {
+                            this.$message.success('预定取消成功');
+                            this.list();
+                        } else {
+                            this.$message.error(res.data.msg || '预定取消失败');
+                        }
+                    }).catch(() => {
+                        this.$message.error('预定取消失败');
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    });
+                });
+            },
+
+            // 显示详情
+            showDetail(index, row) {
+                this.detailData = row;
+                this.detailDialogVisible = true;
+            },
+
+            // 获取支付方式显示文本
+            getPaymentMethodLabel(method) {
+                const map = {
+                    'CASH': '现金',
+                    'WECHAT': '微信支付',
+                    'ALIPAY': '支付宝',
+                    'BANK_CARD': '银行卡'
+                };
+                return map[method] || '其他';
+            },
+        }
+    });
+</script>
+</body>
+</html>

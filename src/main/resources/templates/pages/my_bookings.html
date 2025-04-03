@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>酒店管理系统 - 我的预订</title>
+    <link rel="stylesheet" href="../static/element-ui/index.css">
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/element-ui/index.js"></script>
+    <style>
+        .page-container {
+            padding: 20px;
+            background-color: #f0f2f5;
+            min-height: calc(100vh - 120px);
+            box-sizing: border-box;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1f2f3d;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .page-title i {
+            margin-right: 15px;
+            font-size: 32px;
+            color: #409EFF;
+            background: linear-gradient(135deg, #409EFF 0%, #36a8ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .booking-table {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .el-table {
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .el-table th {
+            background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%) !important;
+            color: #1f2f3d;
+            font-weight: 600;
+            padding: 16px 0;
+            font-size: 14px;
+        }
+
+        .el-table td {
+            padding: 16px 0;
+        }
+
+        .el-table__row {
+            transition: all 0.3s ease;
+        }
+
+        .el-table__row:hover {
+            transform: translateX(5px);
+            background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%) !important;
+        }
+
+        .room-number {
+            font-weight: 600;
+            color: #1890ff;
+            margin-right: 8px;
+        }
+
+        .room-price {
+            color: #f56c6c;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .el-tag {
+            border-radius: 4px;
+            padding: 0 12px;
+            height: 28px;
+            line-height: 26px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .operation-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .operation-buttons .el-button {
+            padding: 8px 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="page-container">
+            <div class="page-title">
+                <i class="el-icon-s-order"></i>
+                我的预订
+            </div>
+
+            <div class="booking-table" v-loading="loading">
+                <el-table :data="bookings" style="width: 100%">
+                    <el-table-column prop="roomId" label="房间号" width="120" align="center">
+                        <template slot-scope="scope">
+                            <span class="room-number">{{scope.row.roomId}}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="roomType" label="房间类型" width="150" align="center">
+                        <template slot-scope="scope">
+                            <el-tag :type="getRoomTypeTag(scope.row.roomType)">
+                                {{getRoomTypeLabel(scope.row.roomType)}}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="checkInTime" label="入住时间" width="180" align="center">
+                        <template slot-scope="scope">
+                            <span>{{scope.row.checkInTime}}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="checkOutTime" label="退房时间" width="180" align="center">
+                        <template slot-scope="scope">
+                            <span>{{scope.row.checkOutTime}}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="totalPrice" label="房费" width="120" align="center">
+                        <template slot-scope="scope">
+                            <span class="room-price">¥{{scope.row.totalPrice}}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="deposit" label="押金" width="120" align="center">
+                        <template slot-scope="scope">
+                            <span class="room-price">¥{{scope.row.deposit}}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="status" label="状态" width="120" align="center">
+                        <template slot-scope="scope">
+                            <el-tag :type="getStatusTag(scope.row.status)">
+                                {{getStatusLabel(scope.row.status)}}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="操作" width="150" align="center">
+                        <template slot-scope="scope">
+                            <div class="operation-buttons">
+                                <el-button
+                                    v-if="scope.row.status === 'PENDING'"
+                                    size="small"
+                                    type="danger"
+                                    @click="cancelBooking(scope.row)">
+                                    取消预订
+                                </el-button>
+                            </div>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    loading: false,
+                    bookings: [],
+                    userInfo: null
+                }
+            },
+            created() {
+                // 获取用户信息
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (userInfoStr) {
+                    try {
+                        this.userInfo = JSON.parse(userInfoStr);
+                        this.loadBookings();
+                    } catch (e) {
+                        console.error('解析用户信息失败:', e);
+                        this.$message.error('获取用户信息失败，请重新登录');
+                    }
+                } else {
+                    this.$message.error('请先登录');
+                }
+            },
+            methods: {
+                loadBookings() {
+                    if (!this.userInfo || !this.userInfo.id) {
+                        this.$message.warning('请先登录');
+                        return;
+                    }
+
+                    this.loading = true;
+                    axios.get(`/api/bookings/customer/${this.userInfo.id}`).then(res => {
+                        if (res.data.code === 200) {
+                            this.bookings = res.data.data;
+                        } else {
+                            this.$message.error(res.data.message || '获取预订列表失败');
+                        }
+                        this.loading = false;
+                    }).catch(() => {
+                        this.loading = false;
+                        this.$message.error('获取预订列表失败');
+                    });
+                },
+                cancelBooking(booking) {
+                    this.$confirm('确定要取消该预订吗？', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        return axios.post(`/api/bookings/updateStatus/${booking.id}/CANCELLED`);
+                    }).then(res => {
+                        if (res.data.code === 200) {
+                            this.$message.success('取消预订成功');
+                            this.loadBookings();
+                        } else {
+                            this.$message.error(res.data.message || '取消预订失败');
+                        }
+                    }).catch(err => {
+                        if (err !== 'cancel') {
+                            this.$message.error('取消预订失败');
+                        }
+                    });
+                },
+                getRoomTypeTag(type) {
+                    const map = {
+                        'STANDARD': 'success',
+                        'DELUXE': 'warning',
+                        'SUITE': 'danger'
+                    };
+                    return map[type] || '';
+                },
+                getRoomTypeLabel(type) {
+                    const map = {
+                        'STANDARD': '标准间',
+                        'DELUXE': '豪华间',
+                        'SUITE': '套房'
+                    };
+                    return map[type] || '其他';
+                },
+                getStatusTag(status) {
+                    const map = {
+                        'PENDING': 'warning',
+                        'CONFIRMED': 'success',
+                        'CANCELLED': 'danger',
+                        'COMPLETED': 'info'
+                    };
+                    return map[status] || '';
+                },
+                getStatusLabel(status) {
+                    const map = {
+                        'PENDING': '待确认',
+                        'CONFIRMED': '已确认',
+                        'CANCELLED': '已取消',
+                        'COMPLETED': '已完成'
+                    };
+                    return map[status] || '其他';
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

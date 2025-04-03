@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>酒店管理系统 - 客户管理</title>
+    <link rel="stylesheet" href="../static/element-ui/index.css">
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/element-ui/index.js"></script>
+    <style>
+        /* 页面内容样式 */
+        .page-container {
+            padding: 20px;
+            background-color: #f0f2f5;
+            min-height: calc(100vh - 120px);
+            box-sizing: border-box;
+        }
+
+        /* 页面标题样式 */
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2f3d;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title i {
+            margin-right: 12px;
+            font-size: 28px;
+            color: #409EFF;
+            background: linear-gradient(135deg, #409EFF 0%, #36a8ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 搜索栏样式优化 */
+        .search-bar {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .search-bar:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .search-bar .el-form-item {
+            margin-bottom: 0;
+            margin-right: 16px;
+        }
+
+        .search-bar .el-input__inner {
+            height: 40px;
+            line-height: 40px;
+            border-radius: 20px;
+            padding-left: 45px;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar .el-input__prefix {
+            left: 15px;
+        }
+
+        .search-bar .el-input__icon {
+            line-height: 40px;
+            color: #909399;
+        }
+
+        .search-bar .el-button {
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        /* 表格容器样式优化 */
+        .customer-table {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .customer-table:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 表格样式优化 */
+        .el-table {
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .el-table th {
+            background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%) !important;
+            color: #1f2f3d;
+            font-weight: 600;
+            padding: 16px 0;
+            font-size: 14px;
+        }
+
+        .el-table td {
+            padding: 16px 0;
+        }
+
+        .el-table__row {
+            transition: all 0.3s ease;
+        }
+
+        .el-table__row:hover {
+            transform: translateX(5px);
+            background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%) !important;
+        }
+
+        /* 标签样式优化 */
+        .el-tag {
+            border-radius: 12px;
+            padding: 0 12px;
+            height: 28px;
+            line-height: 26px;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 按钮样式优化 */
+        .el-button {
+            border-radius: 20px;
+            padding: 10px 24px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+
+        .el-button--primary {
+            background: linear-gradient(135deg, #1890ff 0%, #36a8ff 100%);
+            border: none;
+            box-shadow: 0 2px 6px rgba(24, 144, 255, 0.2);
+        }
+
+        .el-button--primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+
+        .el-button--success {
+            background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+            border: none;
+            box-shadow: 0 2px 6px rgba(82, 196, 26, 0.2);
+        }
+
+        .el-button--success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+        }
+
+        .el-button--danger {
+            background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+            border: none;
+            box-shadow: 0 2px 6px rgba(255, 77, 79, 0.2);
+        }
+
+        .el-button--danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
+        }
+
+        /* 分页样式优化 */
+        .el-pagination {
+            margin-top: 32px;
+            padding: 0;
+            text-align: right;
+        }
+
+        .el-pagination button {
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            margin: 0 4px;
+        }
+
+        .el-pagination .el-pager li {
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            margin: 0 4px;
+        }
+
+        .el-pagination .el-pager li.active {
+            background: linear-gradient(135deg, #1890ff 0%, #36a8ff 100%);
+            box-shadow: 0 2px 6px rgba(24, 144, 255, 0.2);
+        }
+
+        /* 对话框样式优化 */
+        .el-dialog {
+            border-radius: 16px;
+            overflow: hidden;
+            margin-top: 8vh !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .el-dialog__header {
+            background: linear-gradient(135deg, #1890ff 0%, #36a8ff 100%);
+            padding: 20px 24px;
+            margin: 0;
+        }
+
+        .el-dialog__title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .el-dialog__headerbtn .el-dialog__close {
+            color: white;
+        }
+
+        .el-dialog__body {
+            padding: 32px 24px;
+        }
+
+        .el-dialog__footer {
+            padding: 16px 24px 24px;
+            border-top: 1px solid #f0f0f0;
+            background: #f8f9fa;
+        }
+
+        /* 表单样式优化 */
+        .form-row {
+            display: flex;
+            margin: 0 -8px;
+            margin-bottom: 16px;
+        }
+
+        .form-col {
+            flex: 1;
+            padding: 0 8px;
+        }
+
+        /* 数字输入框样式优化 */
+        .el-input-number {
+            width: 100%;
+            line-height: 36px;
+        }
+
+        .el-input-number.is-controls-right .el-input__inner {
+            padding-left: 15px;
+            padding-right: 38px;
+            text-align: left;
+            border-radius: 18px;
+        }
+
+        .el-input-number.is-controls-right .el-input-number__decrease,
+        .el-input-number.is-controls-right .el-input-number__increase {
+            width: 24px;
+            height: 18px;
+            line-height: 18px;
+            border: none;
+            background: #f5f7fa;
+            border-radius: 0;
+        }
+
+        .el-input-number.is-controls-right .el-input-number__increase {
+            border-top-right-radius: 18px;
+            border-bottom: 1px solid #dcdfe6;
+        }
+
+        .el-input-number.is-controls-right .el-input-number__decrease {
+            border-bottom-right-radius: 18px;
+        }
+
+        .el-input-number.is-controls-right .el-input-number__increase:hover,
+        .el-input-number.is-controls-right .el-input-number__decrease:hover {
+            background-color: #e8f4ff;
+            color: #409EFF;
+        }
+
+        .el-input-number.is-controls-right .el-icon-arrow-up,
+        .el-input-number.is-controls-right .el-icon-arrow-down {
+            font-size: 12px;
+            line-height: 18px;
+        }
+
+        .el-input-number:hover .el-input__inner {
+            border-color: #409EFF;
+        }
+
+        .el-input-number.is-controls-right.is-disabled .el-input-number__decrease,
+        .el-input-number.is-controls-right.is-disabled .el-input-number__increase {
+            border-color: #e4e7ed;
+            color: #c0c4cc;
+        }
+
+        .el-input-number.is-disabled .el-input__inner {
+            background-color: #f5f7fa;
+            border-color: #e4e7ed;
+            color: #c0c4cc;
+            cursor: not-allowed;
+        }
+
+        /* 修改占位符颜色 */
+        .el-input-number .el-input__inner::placeholder {
+            color: #c0c4cc;
+        }
+
+        /* 其他表单样式 */
+        .el-form-item__label {
+            font-weight: 500;
+            color: #606266;
+            padding-right: 12px;
+            line-height: 32px;
+        }
+
+        .el-form-item__content {
+            line-height: 32px;
+        }
+
+        .el-input__inner {
+            height: 36px;
+            line-height: 36px;
+            border-radius: 18px;
+            padding: 0 20px;
+            transition: all 0.3s ease;
+        }
+
+        .el-input__inner:hover {
+            border-color: #409EFF;
+        }
+
+        .el-input__inner:focus {
+            border-color: #409EFF;
+            box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+        }
+
+        .el-input-number .el-input__inner {
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        /* 操作按钮样式优化 */
+        .operation-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .operation-buttons .el-button {
+            padding: 8px 16px;
+        }
+
+        .operation-buttons .el-button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* 空状态样式优化 */
+        .el-table__empty-block {
+            min-height: 300px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .el-table__empty-text {
+            color: #909399;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .el-table__empty-text i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #dcdfe6;
+        }
+
+        /* 加载动画样式优化 */
+        .el-loading-spinner {
+            transform: scale(1.2);
+        }
+
+        .el-loading-spinner .circular {
+            width: 36px;
+            height: 36px;
+        }
+
+        .el-loading-spinner .path {
+            stroke: #1890ff;
+            stroke-width: 3;
+        }
+    </style>
+</head>
+<body>
+<div class="page-container">
+    <div class="page-title">
+        <i class="el-icon-user"></i>
+        客户管理
+    </div>
+    <div class="search-bar">
+        <el-form :inline="true" class="demo-form-inline">
+            <el-form-item>
+                <el-input v-model="searchData.name" placeholder="请输入客户名称" clearable>
+                    <i slot="prefix" class="el-icon-search"></i>
+                </el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="onSubmit" icon="el-icon-search">查询</el-button>
+                <el-button @click="resetSearch" icon="el-icon-refresh">重置</el-button>
+                <el-button type="success" @click="addShow" icon="el-icon-plus">新增客户</el-button>
+            </el-form-item>
+        </el-form>
+    </div>
+
+    <div class="customer-table">
+        <el-table
+                :data="tableData"
+                style="width: 100%"
+                v-loading="loading">
+            <el-table-column
+                    type="index"
+                    label="序号"
+                    width="80"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="name"
+                    label="姓名"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="sex"
+                    label="性别"
+                    width="80"
+                    align="center">
+                <template slot-scope="scope">
+                    <el-tag :type="scope.row.sex === '男' ? 'primary' : 'danger'" size="medium">
+                        {{scope.row.sex}}
+                    </el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    prop="age"
+                    label="年龄"
+                    width="80"
+                    align="center">
+                <template slot-scope="scope">
+                    <span v-if="scope.row.age" style="color: #2f54eb; font-weight: 500;">{{scope.row.age}}岁</span>
+                    <span v-else>-</span>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    prop="phone"
+                    label="电话"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="idCard"
+                    label="身份证"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="customerType"
+                    label="客户类型"
+                    width="100"
+                    align="center">
+                <template slot-scope="scope">
+                    <el-tag :type="getCustomerTypeTag(scope.row.customerType)" size="medium">
+                        {{getCustomerTypeLabel(scope.row.customerType)}}
+                    </el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    prop="creditScore"
+                    label="信用分数"
+                    width="100"
+                    align="center">
+                <template slot-scope="scope">
+                        <span :style="{ color: getCreditScoreColor(scope.row.creditScore), fontWeight: 500 }">
+                            {{scope.row.creditScore}}分
+                        </span>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    label="操作"
+                    width="200"
+                    align="center"
+                    fixed="right">
+                <template slot-scope="scope">
+                    <div class="operation-buttons">
+                        <el-button size="mini" type="primary" icon="el-icon-edit"
+                                   @click="updateShow(scope.$index, scope.row)">编辑
+                        </el-button>
+                        <el-button size="mini" type="danger" icon="el-icon-delete" @click="handleDelete(scope.row)">
+                            删除
+                        </el-button>
+                    </div>
+                </template>
+            </el-table-column>
+        </el-table>
+
+        <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="searchData.pageNum"
+                :page-sizes="[5, 10, 20, 50]"
+                :page-size="searchData.pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="searchData.total"
+                background>
+        </el-pagination>
+    </div>
+
+    <el-dialog :title="form.id ? '编辑客户' : '新增客户'" :visible.sync="dialogFormVisible" width="800px"
+               :close-on-click-modal="false" center>
+        <el-form :model="form" :rules="rules" ref="form" label-width="100px">
+            <!-- 基本信息 -->
+            <div class="form-row">
+                <div class="form-col">
+                    <el-form-item label="客户姓名" prop="name">
+                        <el-input v-model="form.name" placeholder="请输入客户姓名"></el-input>
+                    </el-form-item>
+                </div>
+                <div class="form-col">
+                    <el-form-item label="性别" prop="sex">
+                        <el-select v-model="form.sex" placeholder="请选择性别" style="width: 100%;">
+                            <el-option label="男" value="男"></el-option>
+                            <el-option label="女" value="女"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-col">
+                    <el-form-item label="年龄" prop="age">
+                        <el-input-number
+                                v-model="form.age"
+                                :min="1"
+                                :max="150"
+                                controls-position="right"
+                                :step="1"
+                                placeholder="请输入年龄">
+                        </el-input-number>
+                    </el-form-item>
+                </div>
+                <div class="form-col">
+                    <el-form-item label="电话" prop="phone">
+                        <el-input v-model="form.phone" placeholder="请输入电话号码"></el-input>
+                    </el-form-item>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-col">
+                    <el-form-item label="身份证号" prop="idCard">
+                        <el-input v-model="form.idCard" placeholder="请输入身份证号"></el-input>
+                    </el-form-item>
+                </div>
+                <div class="form-col">
+                    <el-form-item label="电子邮箱" prop="email">
+                        <el-input v-model="form.email" placeholder="请输入电子邮箱"></el-input>
+                    </el-form-item>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-col">
+                    <el-form-item label="客户类型" prop="customerType">
+                        <el-select v-model="form.customerType" placeholder="请选择客户类型" style="width: 100%;">
+                            <el-option label="普通客户" value="NORMAL"></el-option>
+                            <el-option label="VIP客户" value="VIP"></el-option>
+                            <el-option label="商务客户" value="BUSINESS"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </div>
+                <div class="form-col">
+                    <el-form-item label="信用分数" prop="creditScore">
+                        <el-input-number
+                                v-model="form.creditScore"
+                                :min="0"
+                                :max="100"
+                                controls-position="right"
+                                :step="1"
+                                placeholder="请输入信用分数">
+                        </el-input-number>
+                    </el-form-item>
+                </div>
+            </div>
+
+            <el-form-item label="详细地址" prop="address">
+                <el-input v-model="form.address" placeholder="请输入详细地址"></el-input>
+            </el-form-item>
+
+            <el-form-item label="备注信息" prop="remark">
+                <el-input type="textarea" v-model="form.remark" :rows="2" placeholder="请输入备注信息"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogFormVisible = false" icon="el-icon-close" plain>取 消</el-button>
+            <el-button type="primary" @click="addOrupdate" icon="el-icon-check">确 定</el-button>
+        </div>
+    </el-dialog>
+</div>
+
+<script>
+    // 创建 Vue 实例
+    const app = new Vue({
+        el: '.page-container',
+        mounted() {
+            this.list();
+        },
+        data() {
+            // 邮箱验证规则
+            const validateEmail = (rule, value, callback) => {
+                if (value && !/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(value)) {
+                    callback(new Error('请输入正确的邮箱地址'));
+                } else {
+                    callback();
+                }
+            };
+
+            return {
+                loading: false,
+                tableData: [],
+                searchData: {
+                    pageNum: 1,
+                    pageSize: 10,
+                    name: ''
+                },
+                dialogFormVisible: false,
+                formLabelWidth: '100px',
+                form: {
+                    id: '',
+                    name: '',
+                    sex: '',
+                    age: null,
+                    phone: '',
+                    idCard: '',
+                    email: '',
+                    address: '',
+                    customerType: 'NORMAL',
+                    creditScore: 60,
+                    remark: ''
+                },
+                rules: {
+                    name: [
+                        {required: true, message: '请输入客户姓名', trigger: 'blur'}
+                    ],
+                    sex: [
+                        {required: true, message: '请选择性别', trigger: 'change'}
+                    ],
+                    age: [
+                        {required: false, type: 'number', message: '年龄必须为数字', trigger: 'blur'}
+                    ],
+                    phone: [
+                        {required: true, message: '请输入电话号码', trigger: 'blur'},
+                        {pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur'}
+                    ],
+                    idCard: [
+                        {required: true, message: '请输入身份证号', trigger: 'blur'},
+                        {
+                            pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/,
+                            message: '请输入正确的身份证号',
+                            trigger: 'blur'
+                        }
+                    ],
+                    email: [
+                        {required: false, validator: validateEmail, trigger: 'blur'}
+                    ],
+                    customerType: [
+                        {required: true, message: '请选择客户类型', trigger: 'change'}
+                    ],
+                    creditScore: [
+                        {required: true, message: '请输入信用分数', trigger: 'blur'}
+                    ]
+                }
+            }
+        },
+        methods: {
+            list() {
+                this.loading = true;
+                axios.get('/api/customers/page', {
+                    params: {
+                        ...this.searchData
+                    }
+                }).then(response => {
+                    if (response.data.code === 200) {
+                        this.tableData = response.data.data.records;
+                        this.searchData.total = response.data.data.total;
+                    }
+                    this.loading = false;
+                });
+            },
+            resetSearch() {
+                this.searchData.name = '';
+                this.onSubmit();
+            },
+            onSubmit() {
+                this.searchData.pageNum = 1;
+                this.list();
+            },
+            addShow() {
+                this.form = {
+                    id: '',
+                    name: '',
+                    sex: '',
+                    age: null,
+                    phone: '',
+                    idCard: '',
+                    email: '',
+                    address: '',
+                    customerType: 'NORMAL',
+                    creditScore: 60,
+                    remark: ''
+                };
+                this.dialogFormVisible = true;
+            },
+            updateShow(index, row) {
+                this.form = {...row};
+                this.dialogFormVisible = true;
+            },
+            handleDelete(row) {
+                this.$confirm('确认删除该客户信息吗？', '提示', {
+                    type: 'warning'
+                }).then(() => {
+                    axios.post(`/api/customers/delete/${row.id}`).then(res => {
+                        if (res.data) {
+                            this.$message.success('删除成功');
+                            this.list();
+                        } else {
+                            this.$message.error('删除失败');
+                        }
+                    }).catch(() => {
+                        this.$message.error('删除失败');
+                    });
+                }).catch(() => {
+                });
+            },
+            addOrupdate() {
+                this.$refs.form.validate(valid => {
+                    if (valid) {
+                        const url = this.form.id ? '/api/customers/update' : '/api/customers/add';
+                        axios.post(url, this.form).then(res => {
+                            if (res.data) {
+                                this.$message.success(this.form.id ? '修改成功' : '添加成功');
+                                this.dialogFormVisible = false;
+                                this.list();
+                            } else {
+                                this.$message.error(this.form.id ? '修改失败' : '添加失败');
+                            }
+                        }).catch(() => {
+                            this.$message.error('操作失败');
+                        });
+                    }
+                });
+            },
+            handleSizeChange(val) {
+                this.searchData.pageSize = val;
+                this.list();
+            },
+            handleCurrentChange(val) {
+                this.searchData.pageNum = val;
+                this.list();
+            },
+            // 获取客户类型标签样式
+            getCustomerTypeTag(type) {
+                const map = {
+                    'NORMAL': 'info',
+                    'VIP': 'success',
+                    'BUSINESS': 'warning'
+                };
+                return map[type] || 'info';
+            },
+
+            // 获取客户类型显示文本
+            getCustomerTypeLabel(type) {
+                const map = {
+                    'NORMAL': '普通客户',
+                    'VIP': 'VIP客户',
+                    'BUSINESS': '商务客户'
+                };
+                return map[type] || '普通客户';
+            },
+
+            // 获取信用分数颜色
+            getCreditScoreColor(score) {
+                if (score >= 80) return '#52c41a';  // 优秀
+                if (score >= 60) return '#1890ff';  // 良好
+                return '#f5222d';  // 较差
+            }
+        }
+    });
+</script>
+</body>
+</html>

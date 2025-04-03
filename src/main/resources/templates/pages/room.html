@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>酒店管理系统 - 房间管理</title>
+    <link rel="stylesheet" href="../static/element-ui/index.css">
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/element-ui/index.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        #app {
+            padding: 24px;
+            min-height: calc(100vh - 48px);
+            box-sizing: border-box;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2f3d;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title i {
+            margin-right: 12px;
+            font-size: 28px;
+            color: #409EFF;
+        }
+
+        /* 搜索栏样式 */
+        .search-bar {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .search-bar:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .search-bar .el-form-item {
+            margin-bottom: 0;
+            margin-right: 16px;
+        }
+
+        .search-bar .el-input__inner {
+            height: 40px;
+            line-height: 40px;
+            border-radius: 20px;
+            padding: 0 20px;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar .el-select .el-input__inner {
+            padding-right: 30px;
+        }
+
+        .search-bar .el-button {
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        /* 表格区域样式 */
+        .room-table {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .room-table:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .el-table {
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .el-table th {
+            background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%) !important;
+            color: #1f2f3d;
+            font-weight: 600;
+            padding: 16px 0;
+        }
+
+        .el-table td {
+            padding: 16px 0;
+        }
+
+        .el-table__row {
+            transition: all 0.3s ease;
+        }
+
+        .el-table__row:hover {
+            transform: translateX(5px);
+            background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%) !important;
+        }
+
+        /* 标签样式 */
+        .el-tag {
+            border-radius: 12px;
+            padding: 0 12px;
+            height: 28px;
+            line-height: 26px;
+            font-weight: 500;
+        }
+
+        /* 按钮样式 */
+        .el-button {
+            border-radius: 20px;
+            padding: 10px 24px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+
+        .el-button--primary {
+            background: linear-gradient(135deg, #1890ff 0%, #36a8ff 100%);
+            border: none;
+            box-shadow: 0 2px 6px rgba(24, 144, 255, 0.2);
+        }
+
+        .el-button--primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+
+        .el-button--success {
+            background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+            border: none;
+            box-shadow: 0 2px 6px rgba(82, 196, 26, 0.2);
+        }
+
+        .el-button--success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+        }
+
+        .el-button--danger {
+            background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+            border: none;
+            box-shadow: 0 2px 6px rgba(255, 77, 79, 0.2);
+        }
+
+        .el-button--danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
+        }
+
+        /* 分页样式 */
+        .el-pagination {
+            margin-top: 32px;
+            padding: 0;
+            text-align: right;
+        }
+
+        .el-pagination button {
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            margin: 0 4px;
+        }
+
+        .el-pagination .el-pager li {
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            margin: 0 4px;
+        }
+
+        .el-pagination .el-pager li.active {
+            background: linear-gradient(135deg, #1890ff 0%, #36a8ff 100%);
+        }
+
+        /* 对话框样式 */
+        .el-dialog {
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 8vh !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .el-dialog__header {
+            background: linear-gradient(90deg, #1890ff 0%, #36a8ff 100%);
+            padding: 20px;
+            margin: 0;
+        }
+
+        .el-dialog__title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .el-dialog__headerbtn .el-dialog__close {
+            color: white;
+        }
+
+        .el-dialog__body {
+            padding: 30px 24px;
+        }
+
+        .el-dialog__footer {
+            padding: 10px 24px 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        /* 表单样式 */
+        .el-form-item__label {
+            font-weight: 500;
+            color: #606266;
+        }
+
+        .el-input__inner {
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .el-input__inner:hover {
+            border-color: #409EFF;
+        }
+
+        .el-input__inner:focus {
+            border-color: #409EFF;
+            box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+        }
+
+        .el-textarea__inner {
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .el-textarea__inner:hover {
+            border-color: #409EFF;
+        }
+
+        .el-textarea__inner:focus {
+            border-color: #409EFF;
+            box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+        }
+
+        /* 价格样式 */
+        .price-text {
+            color: #f5222d;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* 操作按钮组 */
+        .operation-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .operation-buttons .el-button {
+            padding: 8px 16px;
+        }
+
+        .operation-buttons .el-button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* 空状态样式 */
+        .el-table__empty-block {
+            min-height: 300px;
+            background: #f8f9fa;
+        }
+
+        .el-table__empty-text {
+            color: #909399;
+            font-size: 14px;
+        }
+
+        /* 表单布局样式 */
+        .form-row {
+            display: flex;
+            margin: 0 -8px;
+            margin-bottom: 16px;
+        }
+
+        .form-col {
+            flex: 1;
+            padding: 0 8px;
+        }
+
+        .dialog-form {
+            padding: 0 12px;
+        }
+
+        .dialog-form .el-form-item {
+            margin-bottom: 18px;
+        }
+
+        .dialog-form .el-form-item__label {
+            font-weight: 500;
+            color: #606266;
+            padding-right: 12px;
+            line-height: 32px;
+        }
+
+        .dialog-form .el-form-item__content {
+            line-height: 32px;
+        }
+
+        .dialog-form .el-input__inner {
+            height: 32px;
+            line-height: 32px;
+        }
+
+        .dialog-form .el-input-number {
+            line-height: 32px;
+        }
+
+        .dialog-form .el-input-number__decrease,
+        .dialog-form .el-input-number__increase {
+            height: 30px;
+            width: 30px;
+            line-height: 30px;
+        }
+
+        .dialog-form .el-textarea__inner {
+            padding: 8px 12px;
+        }
+
+        .dialog-form .el-textarea.el-input--medium {
+            font-size: 14px;
+        }
+
+        .dialog-form .el-form-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .el-dialog__body {
+            padding: 20px 0;
+        }
+
+        .el-dialog__footer {
+            padding: 10px 20px 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .dialog-footer {
+            text-align: right;
+            padding: 0 !important;
+            margin-top: 0;
+        }
+
+        .dialog-footer .el-button {
+            padding: 8px 20px;
+        }
+
+        /* 调整文本域的行间距 */
+        .el-form-item--medium .el-form-item__content {
+            line-height: 1.5;
+        }
+
+        .el-form-item.is-required .el-form-item__label:before {
+            margin-right: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="page-header">
+            <div class="page-title">
+                <i class="el-icon-office-building"></i>
+                房间管理
+            </div>
+        </div>
+
+        <div class="search-bar">
+            <el-form :inline="true" :model="searchForm" class="demo-form-inline">
+                <el-form-item label="房间号">
+                    <el-input v-model="searchForm.roomNumber" placeholder="请输入房间号" clearable>
+                        <i slot="prefix" class="el-icon-search"></i>
+                    </el-input>
+                </el-form-item>
+                <el-form-item label="房间类型">
+                    <el-select v-model="searchForm.roomType" placeholder="请选择房间类型" clearable>
+                        <el-option label="标准间" value="STANDARD"></el-option>
+                        <el-option label="豪华间" value="DELUXE"></el-option>
+                        <el-option label="套房" value="SUITE"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="状态">
+                    <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
+                        <el-option label="空闲" :value="0"></el-option>
+                        <el-option label="已预订" :value="1"></el-option>
+                        <el-option label="已入住" :value="2"></el-option>
+                        <el-option label="维护中" :value="3"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="handleSearch" icon="el-icon-search">查询</el-button>
+                    <el-button @click="resetSearch" icon="el-icon-refresh">重置</el-button>
+                    <el-button type="success" @click="handleAdd" icon="el-icon-plus">新增房间</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+
+        <div class="room-table">
+            <el-table :data="roomList" style="width: 100%" v-loading="loading">
+                <el-table-column prop="roomNumber" label="房间号" width="120" align="center"></el-table-column>
+                <el-table-column prop="roomType" label="房间类型" width="120" align="center">
+                    <template slot-scope="scope">
+                        <el-tag size="medium" :type="getRoomTypeTagType(scope.row.roomType)">
+                            {{getRoomTypeText(scope.row.roomType)}}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="price" label="价格" width="120" align="center">
+                    <template slot-scope="scope">
+                        <span style="color: #f5222d; font-weight: 500;">¥{{scope.row.price}}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="status" label="状态" width="100" align="center">
+                    <template slot-scope="scope">
+                        <el-tag :type="getStatusType(scope.row.status)" class="status-tag">
+                            {{getStatusText(scope.row.status)}}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="floor" label="楼层" width="100" align="center">
+                    <template slot-scope="scope">
+                        <span>{{scope.row.floor}}层</span>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="area" label="面积" width="100" align="center">
+                    <template slot-scope="scope">
+                        <span>{{scope.row.area}}㎡</span>
+                    </template>
+                </el-table-column>
+                <el-table-column label="操作" width="200" align="center" fixed="right">
+                    <template slot-scope="scope">
+                        <div class="operation-buttons">
+                            <el-button size="mini" type="primary" icon="el-icon-edit" @click="handleEdit(scope.row)">编辑</el-button>
+                            <el-button size="mini" type="danger" icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
+                        </div>
+                    </template>
+                </el-table-column>
+            </el-table>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <el-pagination
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    :current-page="currentPage"
+                    :page-sizes="[10, 20, 50, 100]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="total"
+                    background>
+                </el-pagination>
+            </div>
+        </div>
+
+        <!-- 新增/编辑房间对话框 -->
+        <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="720px" :close-on-click-modal="false" center>
+            <el-form :model="roomForm" :rules="rules" ref="roomForm" label-width="90px" class="dialog-form" size="medium">
+                <!-- 基本信息 -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <el-form-item label="房间号" prop="roomNumber">
+                            <el-input v-model="roomForm.roomNumber" placeholder="请输入房间号"></el-input>
+                        </el-form-item>
+                    </div>
+                    <div class="form-col">
+                        <el-form-item label="房间类型" prop="roomType">
+                            <el-select v-model="roomForm.roomType" placeholder="请选择房间类型" style="width: 100%;">
+                                <el-option label="标准间" value="STANDARD"></el-option>
+                                <el-option label="豪华间" value="DELUXE"></el-option>
+                                <el-option label="套房" value="SUITE"></el-option>
+                            </el-select>
+                        </el-form-item>
+                    </div>
+                </div>
+
+                <!-- 价格和状态 -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <el-form-item label="价格" prop="price">
+                            <el-input-number v-model="roomForm.price" :min="0" :precision="2" :step="10" style="width: 100%;" controls-position="right"></el-input-number>
+                        </el-form-item>
+                    </div>
+                    <div class="form-col">
+                        <el-form-item label="状态" prop="status">
+                            <el-select v-model="roomForm.status" placeholder="请选择状态" style="width: 100%;">
+                                <el-option label="空闲" :value="0"></el-option>
+                                <el-option label="已预订" :value="1"></el-option>
+                                <el-option label="已入住" :value="2"></el-option>
+                                <el-option label="维护中" :value="3"></el-option>
+                            </el-select>
+                        </el-form-item>
+                    </div>
+                </div>
+
+                <!-- 楼层和面积 -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <el-form-item label="楼层" prop="floor">
+                            <el-input-number v-model="roomForm.floor" :min="1" :max="20" style="width: 100%;" controls-position="right"></el-input-number>
+                        </el-form-item>
+                    </div>
+                    <div class="form-col">
+                        <el-form-item label="面积" prop="area">
+                            <el-input-number v-model="roomForm.area" :min="0" :precision="2" :step="5" style="width: 100%;" controls-position="right"></el-input-number>
+                        </el-form-item>
+                    </div>
+                </div>
+
+                <!-- 最大入住和设施 -->
+                <div class="form-row">
+                    <div class="form-col">
+                        <el-form-item label="最大入住" prop="maxGuests">
+                            <el-input-number v-model="roomForm.maxGuests" :min="1" :max="10" style="width: 100%;" controls-position="right"></el-input-number>
+                        </el-form-item>
+                    </div>
+                    <div class="form-col">
+                        <el-form-item label="设施" prop="facilities">
+                            <el-input v-model="roomForm.facilities" placeholder="请输入房间设施信息"></el-input>
+                        </el-form-item>
+                    </div>
+                </div>
+
+                <!-- 描述和备注 -->
+                <el-form-item label="描述" prop="description">
+                    <el-input type="textarea" v-model="roomForm.description" :rows="2" placeholder="请输入房间详细描述信息"></el-input>
+                </el-form-item>
+
+                <el-form-item label="备注" prop="remark">
+                    <el-input type="textarea" v-model="roomForm.remark" :rows="2" placeholder="请输入其他备注信息"></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="dialogVisible = false" icon="el-icon-close" plain>取 消</el-button>
+                <el-button type="primary" @click="handleSubmit" icon="el-icon-check">确 定</el-button>
+            </div>
+        </el-dialog>
+    </div>
+
+    <script>
+        // 创建 Vue 实例
+        const app = new Vue({
+            el: '#app',
+            mounted() {
+                // 加载房间列表
+                this.loadRoomList();
+            },
+            data() {
+                return {
+                    loading: false,
+                    searchForm: {
+                        roomNumber: '',
+                        roomType: '',
+                        status: ''
+                    },
+                    roomList: [],
+                    currentPage: 1,
+                    pageSize: 10,
+                    total: 0,
+                    dialogVisible: false,
+                    dialogTitle: '新增房间',
+                    roomForm: {
+                        roomNumber: '',
+                        roomType: '',
+                        price: 0,
+                        floor: 1,
+                        area: 0,
+                        status: 0,
+                        facilities: '',
+                        description: '',
+                        maxGuests: 2,
+                        remark: ''
+                    },
+                    rules: {
+                        roomNumber: [
+                            { required: true, message: '请输入房间号', trigger: 'blur' },
+                            { pattern: /^[0-9]{3}$/, message: '房间号必须为3位数字', trigger: 'blur' }
+                        ],
+                        roomType: [
+                            { required: true, message: '请选择房间类型', trigger: 'change' }
+                        ],
+                        price: [
+                            { required: true, message: '请输入价格', trigger: 'blur' }
+                        ],
+                        floor: [
+                            { required: true, message: '请输入楼层', trigger: 'blur' }
+                        ],
+                        area: [
+                            { required: true, message: '请输入面积', trigger: 'blur' }
+                        ],
+                        status: [
+                            { required: true, message: '请选择状态', trigger: 'change' }
+                        ],
+                        maxGuests: [
+                            { required: true, message: '请输入最大入住人数', trigger: 'blur' }
+                        ],
+                        facilities: [
+                            { required: true, message: '请输入房间设施信息', trigger: 'blur' }
+                        ]
+                    }
+                }
+            },
+            methods: {
+                loadRoomList() {
+                    this.loading = true;
+                    axios.get('/api/rooms', {
+                        params: {
+                            pageNum: this.currentPage,
+                            pageSize: this.pageSize,
+                            ...this.searchForm
+                        }
+                    }).then(response => {
+                        if (response.data.code === 200) {
+                            this.roomList = response.data.data.records;
+                            this.total = response.data.data.total;
+                        }
+                        this.loading = false;
+                    });
+                },
+                handleSearch() {
+                    this.currentPage = 1;
+                    this.loadRoomList();
+                },
+                resetSearch() {
+                    this.searchForm = {
+                        roomNumber: '',
+                        roomType: '',
+                        status: ''
+                    };
+                    this.handleSearch();
+                },
+                handleSizeChange(val) {
+                    this.pageSize = val;
+                    this.loadRoomList();
+                },
+                handleCurrentChange(val) {
+                    this.currentPage = val;
+                    this.loadRoomList();
+                },
+                handleAdd() {
+                    this.dialogTitle = '新增房间';
+                    this.roomForm = {
+                        roomNumber: '',
+                        roomType: '',
+                        price: 0,
+                        floor: 1,
+                        area: 0,
+                        status: 0,
+                        facilities: '',
+                        description: '',
+                        maxGuests: 2,
+                        remark: ''
+                    };
+                    this.dialogVisible = true;
+                },
+                handleEdit(row) {
+                    this.dialogTitle = '编辑房间';
+                    this.roomForm = { ...row };
+                    this.dialogVisible = true;
+                },
+                handleDelete(row) {
+                    this.$confirm('确认删除该房间吗？', '提示', {
+                        type: 'warning'
+                    }).then(() => {
+                        axios.post(`/api/rooms/delete/${row.id}`).then(response => {
+                            if (response.data.code === 200) {
+                                this.$message.success('删除成功');
+                                this.loadRoomList();
+                            }
+                        });
+                    });
+                },
+                handleSubmit() {
+                    this.$refs.roomForm.validate(valid => {
+                        if (valid) {
+                            const url = this.roomForm.id ? '/api/rooms/update' : '/api/rooms/add';
+                            axios.post(url, this.roomForm).then(response => {
+                                if (response.data.code === 200) {
+                                    this.$message.success(this.roomForm.id ? '更新成功' : '添加成功');
+                                    this.dialogVisible = false;
+                                    this.loadRoomList();
+                                } else {
+                                    this.$message.error(response.data.msg || '操作失败');
+                                }
+                            }).catch(error => {
+                                this.$message.error('操作失败：' + (error.response?.data?.msg || '服务器错误'));
+                            });
+                        }
+                    });
+                },
+                getRoomTypeText(type) {
+                    const types = {
+                        'STANDARD': '标准间',
+                        'DELUXE': '豪华间',
+                        'SUITE': '套房'
+                    };
+                    return types[type] || type;
+                },
+                getRoomTypeTagType(type) {
+                    const types = {
+                        'STANDARD': '',
+                        'DELUXE': 'warning',
+                        'SUITE': 'success'
+                    };
+                    return types[type] || '';
+                },
+                getStatusType(status) {
+                    const types = {
+                        0: 'success',
+                        1: 'warning',
+                        2: 'danger',
+                        3: 'info'
+                    };
+                    return types[status] || 'info';
+                },
+                getStatusText(status) {
+                    const texts = {
+                        0: '空闲',
+                        1: '已预订',
+                        2: '已入住',
+                        3: '维护中'
+                    };
+                    return texts[status] || '未知';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

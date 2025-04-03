@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>酒店管理系统</title>
+    <link rel="stylesheet" href="../static/element-ui/index.css">
+    <script src="../static/vue.js"></script>
+    <script src="../static/axios.min.js"></script>
+    <script src="../static/element-ui/index.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #f0f2f5;
+        }
+        .el-container {
+            height: 100vh;
+        }
+        .el-header {
+            background: linear-gradient(90deg, #1890ff 0%, #36a8ff 100%);
+            color: white;
+            line-height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            position: relative;
+            z-index: 2;
+        }
+        .el-aside {
+            background-color: #304156;
+            color: white;
+            box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
+            width: 220px !important;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1;
+        }
+        .el-main {
+            margin-left: 220px;
+            padding: 24px;
+            min-height: calc(100vh - 60px);
+            margin-top: 60px;
+            background-color: #f0f2f5;
+        }
+        .el-menu {
+            border-right: none;
+            background-color: transparent !important;
+            margin-top: 60px;
+        }
+        .el-menu-item {
+            color: #bfcbd9 !important;
+            height: 56px;
+            line-height: 56px;
+            font-size: 14px;
+            padding: 0 20px !important;
+            margin: 4px 0;
+            transition: all 0.3s ease;
+        }
+        .el-menu-item:hover {
+            color: #409EFF !important;
+            background-color: #263445 !important;
+        }
+        .el-menu-item.is-active {
+            color: #409EFF !important;
+            background: linear-gradient(90deg, rgba(64, 158, 255, 0.2) 0%, rgba(64, 158, 255, 0.1) 100%) !important;
+            border-right: 3px solid #409EFF;
+        }
+        .el-menu-item i {
+            color: inherit;
+            font-size: 18px;
+            margin-right: 12px;
+            vertical-align: middle;
+            width: 24px;
+            text-align: center;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .header-logo {
+            width: 42px;
+            height: 42px;
+            margin-right: 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .header-logo i {
+            font-size: 24px;
+            color: white;
+        }
+        .header-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+        .el-dropdown-link {
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            transition: all 0.3s ease;
+        }
+        .el-dropdown-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .el-dropdown-menu__item {
+            padding: 10px 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        .el-dropdown-menu__item i {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <el-container>
+            <el-header>
+                <div class="header-left">
+                    <div class="header-logo">
+                        <i class="el-icon-s-home"></i>
+                    </div>
+                    <span class="header-title">酒店管理系统</span>
+                </div>
+                <div class="header-right">
+                    <el-dropdown>
+                        <span class="el-dropdown-link">
+                            <i class="el-icon-user" style="margin-right: 8px;"></i>
+                            {{username}}<i class="el-icon-arrow-down el-icon--right"></i>
+                        </span>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item divided @click.native="handleLogout">
+                                <i class="el-icon-switch-button"></i>退出登录
+                            </el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
+                </div>
+            </el-header>
+            <el-container>
+                <el-aside width="220px">
+                    <el-menu
+                        :default-active="activeMenu"
+                        background-color="#304156"
+                        text-color="#bfcbd9"
+                        active-text-color="#409EFF">
+                        <el-menu-item index="1" @click="goToPage('index')">
+                            <i class="el-icon-s-home"></i>
+                            <span slot="title">首页</span>
+                        </el-menu-item>
+                        <el-menu-item index="2" @click="goToPage('room')">
+                            <i class="el-icon-s-order"></i>
+                            <span slot="title">房间管理</span>
+                        </el-menu-item>
+                        <el-menu-item index="3" @click="goToPage('customer')">
+                            <i class="el-icon-user"></i>
+                            <span slot="title">客户管理</span>
+                        </el-menu-item>
+                        <el-menu-item index="4" @click="goToPage('room_customer')">
+                            <i class="el-icon-s-data"></i>
+                            <span slot="title">预订管理</span>
+                        </el-menu-item>
+                    </el-menu>
+                </el-aside>
+                <el-main>
+                    <slot></slot>
+                </el-main>
+            </el-container>
+        </el-container>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    username: '管理员',
+                    activeMenu: '1'
+                }
+            },
+            methods: {
+                goToPage(page) {
+                    window.location.href = page + '.html';
+                },
+                handleLogout() {
+                    this.$confirm('确认退出登录吗？', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('userInfo');
+                        
+                        this.$message({
+                            type: 'success',
+                            message: '退出登录成功'
+                        });
+                        
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 500);
+                    }).catch(() => {
+                        // 取消退出，不做任何操作
+                    });
+                }
+            },
+            created() {
+                // 根据当前页面路径设置激活菜单
+                const path = window.location.pathname;
+                if (path.includes('room.html')) {
+                    this.activeMenu = '2';
+                } else if (path.includes('customer.html')) {
+                    this.activeMenu = '3';
+                } else if (path.includes('room_customer.html')) {
+                    this.activeMenu = '4';
+                } else {
+                    this.activeMenu = '1';
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

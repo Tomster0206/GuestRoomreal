@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <title>酒店管理系统 - 首页</title>
+        <link rel="stylesheet" href="../static/element-ui/index.css">
+        <link rel="stylesheet" href="../static/css/layout.css">
+        <script src="../static/vue.js"></script>
+        <script src="../static/axios.min.js"></script>
+        <script src="../static/element-ui/index.js"></script>
+        <script src="../static/js/layout.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: "Microsoft YaHei", sans-serif;
+                background-color: #f0f2f5;
+                overflow: hidden;
+            }
+            .el-container {
+                height: 100vh;
+            }
+            .el-header {
+                background: linear-gradient(90deg, #1890ff 0%, #36a8ff 100%);
+                color: white;
+                line-height: 60px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 24px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                position: relative;
+                z-index: 2;
+            }
+            .el-aside {
+                background-color: #304156;
+                color: white;
+                box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
+                width: 220px !important;
+            }
+            .el-menu {
+                border-right: none;
+                background-color: transparent !important;
+            }
+            .el-menu-item {
+                color: #bfcbd9 !important;
+                height: 56px;
+                line-height: 56px;
+                font-size: 14px;
+                padding: 0 20px !important;
+                margin: 4px 0;
+                transition: all 0.3s ease;
+            }
+            .el-menu-item:hover {
+                color: #409EFF !important;
+                background-color: #263445 !important;
+            }
+            .el-menu-item.is-active {
+                color: #409EFF !important;
+                background: linear-gradient(90deg, rgba(64, 158, 255, 0.2) 0%, rgba(64, 158, 255, 0.1) 100%) !important;
+                border-right: 3px solid #409EFF;
+                padding-left: 17px !important;
+            }
+            .el-menu-item i {
+                color: inherit;
+                font-size: 18px;
+                margin-right: 12px;
+                vertical-align: middle;
+                width: 24px;
+                text-align: center;
+            }
+            .el-menu-item span {
+                vertical-align: middle;
+            }
+            .main-content {
+                padding: 0;
+                background-color: #f0f2f5;
+                height: calc(100vh - 60px);
+                overflow: hidden;
+                position: relative;
+            }
+            .main-content > div:not(.iframe-container) {
+                padding: 20px;
+            }
+            .iframe-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: #f0f2f5;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            iframe {
+                width: 100%;
+                height: 100%;
+                border: none;
+                background: transparent;
+            }
+            .welcome-card {
+                margin-bottom: 24px;
+                border-radius: 12px;
+                background: linear-gradient(135deg, #1890ff 0%, #36a8ff 100%);
+                color: white;
+                box-shadow: 0 4px 16px rgba(24, 144, 255, 0.2);
+                position: relative;
+                overflow: hidden;
+            }
+            .welcome-card::after {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+                animation: welcome-shine 3s ease-in-out infinite;
+            }
+            @keyframes welcome-shine {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            .welcome-card .el-card__header {
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 20px 24px;
+            }
+            .welcome-card .el-card__body {
+                padding: 20px;
+                font-size: 16px;
+            }
+            .statistics-container {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 24px;
+                margin-bottom: 24px;
+            }
+            .stat-card {
+                background: white;
+                padding: 24px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                position: relative;
+                overflow: hidden;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .stat-card::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .stat-card:hover {
+                transform: translateY(-6px);
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            }
+            .stat-card:hover::after {
+                opacity: 1;
+            }
+            .stat-icon {
+                position: absolute;
+                right: 20px;
+                top: 20px;
+                font-size: 36px;
+                opacity: 0.15;
+                color: #1890ff;
+                transition: all 0.3s ease;
+            }
+            .stat-card:hover .stat-icon {
+                transform: scale(1.2);
+                opacity: 0.2;
+            }
+            .stat-title {
+                color: #8c8c8c;
+                font-size: 14px;
+                margin-bottom: 12px;
+                position: relative;
+            }
+            .stat-value {
+                color: #262626;
+                font-size: 30px;
+                font-weight: 600;
+                line-height: 1.4;
+                margin-bottom: 8px;
+            }
+            .stat-trend {
+                font-size: 13px;
+                display: flex;
+                align-items: center;
+                color: #52c41a;
+            }
+            .stat-trend.down {
+                color: #ff4d4f;
+            }
+            .welcome-info {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .welcome-info span {
+                font-size: 18px;
+                font-weight: 500;
+            }
+            .weather-info {
+                display: flex;
+                align-items: center;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 6px 12px;
+                border-radius: 20px;
+                backdrop-filter: blur(4px);
+            }
+            .weather-icon {
+                font-size: 24px;
+                margin-right: 8px;
+                animation: weather-float 3s ease-in-out infinite;
+            }
+            @keyframes weather-float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-5px); }
+            }
+            .recent-bookings {
+                background: white;
+                padding: 24px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            }
+            .section-title {
+                font-size: 20px;
+                color: #262626;
+                margin-bottom: 24px;
+                padding-bottom: 16px;
+                border-bottom: 2px solid #f0f0f0;
+                font-weight: 600;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .refresh-btn {
+                padding: 6px 0;
+                font-size: 14px;
+                color: #1890ff;
+                transition: all 0.3s ease;
+            }
+            .refresh-btn:hover {
+                color: #40a9ff;
+                transform: rotate(180deg);
+            }
+            .el-table {
+                margin-top: 16px;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            }
+            .el-table th {
+                background-color: #fafafa !important;
+                font-weight: 600;
+                color: #262626;
+                padding: 12px 0;
+            }
+            .el-table__row {
+                transition: all 0.3s ease;
+            }
+            .el-table__row:hover {
+                background-color: #f5f7fa !important;
+                transform: translateX(5px);
+            }
+            .el-tag {
+                border-radius: 4px;
+                padding: 0 8px;
+                height: 24px;
+                line-height: 22px;
+            }
+            .header-left {
+                display: flex;
+                align-items: center;
+                position: relative;
+                cursor: pointer;
+                padding: 4px 8px;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+            }
+            .header-left:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+            .header-logo {
+                width: 42px;
+                height: 42px;
+                margin-right: 16px;
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                position: relative;
+                overflow: hidden;
+            }
+            .header-logo::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .header-logo:hover {
+                transform: scale(1.05) rotate(5deg);
+                background: rgba(255, 255, 255, 0.25);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+            .header-logo:hover::before {
+                opacity: 1;
+            }
+            .header-logo i {
+                font-size: 24px;
+                color: white;
+                transition: all 0.3s ease;
+            }
+            .header-logo:hover i {
+                transform: scale(1.1);
+            }
+            .header-title {
+                font-size: 22px;
+                font-weight: 600;
+                color: white;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                position: relative;
+                padding-bottom: 2px;
+            }
+            .header-title::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 0;
+                height: 2px;
+                background: white;
+                transition: width 0.3s ease;
+            }
+            .header-left:hover .header-title::after {
+                width: 100%;
+            }
+            .header-right {
+                display: flex;
+                align-items: center;
+            }
+            .el-dropdown-link {
+                display: flex;
+                align-items: center;
+                padding: 0 12px;
+                height: 36px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 18px;
+                transition: all 0.3s ease;
+                user-select: none;
+            }
+            .el-dropdown-link:hover {
+                background: rgba(255, 255, 255, 0.2);
+                transform: translateY(-1px);
+            }
+            .el-dropdown-link i.el-icon-arrow-down {
+                transition: transform 0.3s ease;
+            }
+            .el-dropdown-link:hover i.el-icon-arrow-down {
+                transform: rotate(180deg);
+            }
+            .el-dropdown-menu {
+                padding: 8px 0 !important;
+                border-radius: 8px !important;
+                border: none !important;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+            }
+            .el-dropdown-menu__item {
+                padding: 10px 24px !important;
+                font-size: 14px !important;
+                display: flex !important;
+                align-items: center !important;
+                transition: all 0.3s ease !important;
+            }
+            .el-dropdown-menu__item i {
+                margin-right: 10px !important;
+                font-size: 16px !important;
+                transition: transform 0.3s ease !important;
+            }
+            .el-dropdown-menu__item:hover {
+                background-color: #f5f7fa !important;
+                padding-left: 28px !important;
+            }
+            .el-dropdown-menu__item:hover i {
+                transform: scale(1.1) !important;
+                color: #409EFF !important;
+            }
+            .el-dropdown-menu__item.danger {
+                color: #f56c6c !important;
+            }
+            .el-dropdown-menu__item.danger:hover {
+                background-color: #fff5f5 !important;
+            }
+            .el-dropdown-menu__item.danger:hover i {
+                color: #f56c6c !important;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <el-container>
+                <el-header>
+                    <div class="header-left">
+                        <div class="header-logo">
+                            <i class="el-icon-s-home"></i>
+                        </div>
+                        <span class="header-title">酒店管理系统</span>
+                    </div>
+                    <div class="header-right">
+                        <el-dropdown>
+                            <span class="el-dropdown-link" style="color: white; cursor: pointer;">
+                                <i class="el-icon-user" style="margin-right: 5px;"></i>
+                                {{name}}<i class="el-icon-arrow-down el-icon--right"></i>
+                            </span>
+                            <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item @click.native="handleLogout">
+                                    <i class="el-icon-switch-button"></i> 退出登录
+                                </el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
+                    </div>
+                </el-header>
+                <el-container>
+                    <el-aside width="200px">
+                        <el-menu
+                            :default-active="activeMenu"
+                            background-color="#304156"
+                            text-color="#bfcbd9"
+                            active-text-color="#409EFF">
+                            <el-menu-item index="1" @click="goToPage('index')">
+                                <i class="el-icon-s-home"></i>
+                                <span slot="title">首页</span>
+                            </el-menu-item>
+                            <template v-if="userInfo.role === 'admin'">
+                                <el-menu-item index="2" @click="goToPage('room')">
+                                    <i class="el-icon-s-order"></i>
+                                    <span slot="title">房间管理</span>
+                                </el-menu-item>
+                                <el-menu-item index="3" @click="goToPage('customer')">
+                                    <i class="el-icon-user"></i>
+                                    <span slot="title">客户管理</span>
+                                </el-menu-item>
+                                <el-menu-item index="4" @click="goToPage('room_customer')">
+                                    <i class="el-icon-s-data"></i>
+                                    <span slot="title">预订管理</span>
+                                </el-menu-item>
+                            </template>
+                            <template v-else>
+                                <el-menu-item index="5" @click="goToPage('booking')">
+                                    <i class="el-icon-date"></i>
+                                    <span slot="title">房间预订</span>
+                                </el-menu-item>
+                                <el-menu-item index="6" @click="goToPage('my_bookings')">
+                                    <i class="el-icon-document"></i>
+                                    <span slot="title">我的预订</span>
+                                </el-menu-item>
+                            </template>
+                        </el-menu>
+                    </el-aside>
+                    <el-main class="main-content">
+                        <div v-if="currentPage !== 'index'" class="iframe-container">
+                            <iframe :src="currentPageUrl" frameborder="0" scrolling="auto" style="width: 100%; height: 100%; border: none;"></iframe>
+                        </div>
+                        <div v-else>
+                            <el-card class="welcome-card">
+                                <div slot="header">
+                                    <div class="welcome-info">
+                                        <span>欢迎回来，{{name}}</span>
+                                        <div class="weather-info">
+                                            <i class="el-icon-sunny weather-icon"></i>
+                                            <span>晴 26℃</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>今天是 {{currentDate}}</div>
+                            </el-card>
+
+                            <div class="statistics-container">
+                                <div class="stat-card">
+                                    <i class="el-icon-house stat-icon"></i>
+                                    <div class="stat-title">总房间数</div>
+                                    <div class="stat-value">{{stats.totalRooms}}</div>
+                                    <div class="stat-trend" :class="{ down: stats.totalRooms < stats.yesterdayTotalRooms }">
+                                        <i :class="stats.totalRooms >= stats.yesterdayTotalRooms ? 'el-icon-top' : 'el-icon-bottom'"></i>
+                                        较昨日 {{Math.abs(stats.totalRooms - stats.yesterdayTotalRooms)}}
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <i class="el-icon-s-home stat-icon"></i>
+                                    <div class="stat-title">可用房间</div>
+                                    <div class="stat-value">{{stats.availableRooms}}</div>
+                                    <div class="stat-trend" :class="{ down: stats.availableRooms < stats.yesterdayAvailable }">
+                                        <i :class="stats.availableRooms >= stats.yesterdayAvailable ? 'el-icon-top' : 'el-icon-bottom'"></i>
+                                        较昨日 {{Math.abs(stats.availableRooms - stats.yesterdayAvailable)}}
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <i class="el-icon-s-order stat-icon"></i>
+                                    <div class="stat-title">今日预订</div>
+                                    <div class="stat-value">{{stats.todayBookings}}</div>
+                                    <div class="stat-trend" :class="{ down: stats.todayBookings < stats.yesterdayBookings }">
+                                        <i :class="stats.todayBookings >= stats.yesterdayBookings ? 'el-icon-top' : 'el-icon-bottom'"></i>
+                                        较昨日 {{Math.abs(stats.todayBookings - stats.yesterdayBookings)}}
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <i class="el-icon-user stat-icon"></i>
+                                    <div class="stat-title">今日入住</div>
+                                    <div class="stat-value">{{stats.todayCheckins}}</div>
+                                    <div class="stat-trend" :class="{ down: stats.todayCheckins < stats.yesterdayCheckins }">
+                                        <i :class="stats.todayCheckins >= stats.yesterdayCheckins ? 'el-icon-top' : 'el-icon-bottom'"></i>
+                                        较昨日 {{Math.abs(stats.todayCheckins - stats.yesterdayCheckins)}}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div  class="recent-bookings">
+                                <div class="section-title">最近预订</div>
+                                <el-button
+                                    type="text"
+                                    icon="el-icon-refresh"
+                                    class="refresh-btn"
+                                    @click="loadRecentBookings">
+                                    刷新
+                                </el-button>
+                                <el-table
+                                    :data="recentBookings"
+                                    style="width: 100%"
+                                    v-loading="loading">
+                                    <el-table-column prop="roomId" label="房间号" width="120"></el-table-column>
+                                    <el-table-column prop="customerName" label="客户姓名" width="120"></el-table-column>
+                                    <el-table-column prop="checkInTime" label="入住时间" width="180"></el-table-column>
+                                    <el-table-column prop="checkOutTime" label="退房时间" width="180"></el-table-column>
+                                    <el-table-column prop="status" label="状态" width="100">
+                                        <template slot-scope="scope">
+                                            <el-tag :type="getStatusType(scope.row.status)">
+                                                {{getStatusText(scope.row.status)}}
+                                            </el-tag>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </div>
+                        </div>
+                    </el-main>
+                </el-container>
+            </el-container>
+        </div>
+
+        <script>
+            new Vue({
+                el: '#app',
+                data() {
+                    return {
+                        name: '',
+                        activeMenu: '1',
+                        currentPage: 'index',
+                        currentDate: new Date().toLocaleDateString('zh-CN', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            weekday: 'long'
+                        }),
+                        stats: {
+                            totalRooms: 0,
+                            availableRooms: 0,
+                            todayBookings: 0,
+                            todayCheckins: 0,
+                            yesterdayTotalRooms: 0,
+                            yesterdayAvailable: 0,
+                            yesterdayBookings: 0,
+                            yesterdayCheckins: 0
+                        },
+                        recentBookings: [],
+                        loading: false,
+                        userInfo: {}
+                    }
+                },
+                computed: {
+                    currentPageUrl() {
+                        return this.currentPage === 'index' ? '' : this.currentPage + '.html';
+                    }
+                },
+                created() {
+                    // 初始化用户信息
+                    const userInfo = layoutTools.initUserInfo();
+                    this.userInfo = userInfo;
+                    this.name = userInfo.name || userInfo.username;
+
+                    // 检查用户角色
+                    if (!userInfo.role) {
+                        this.$message.error('用户角色信息缺失，请重新登录');
+                        window.location.href = 'login.html';
+                        return;
+                    }
+
+                    // 加载数据
+                    this.fetchDashboardStats();
+                    this.loadRecentBookings();
+                },
+                methods: {
+                    fetchDashboardStats() {
+                        axios.get('/api/dashboard/stats')
+                            .then(response => {
+                                if (response.data.code === 200) {
+                                    this.stats = response.data.data;
+                                } else {
+                                    this.$message.error('获取统计数据失败：' + response.data.msg);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('获取统计数据出错：', error);
+                                this.$message.error('获取统计数据出错');
+                            });
+                    },
+                    loadRecentBookings() {
+                        // 加载最近预订
+                        this.loading = true;
+                        axios.get('/api/bookings/list').then(response => {
+                            if (response.data.code === 200) {
+                                const bookings = response.data.data;
+                                this.recentBookings = bookings;
+                            }
+                            this.loading = false;
+                        }).catch(() => {
+                            this.loading = false;
+                            this.$message.error('加载数据失败');
+                        });
+                    },
+                    goToPage(page) {
+                        // 更新活动菜单
+                        switch(page) {
+                            case 'index':
+                                this.activeMenu = '1';
+                                break;
+                            case 'room':
+                                this.activeMenu = '2';
+                                break;
+                            case 'customer':
+                                this.activeMenu = '3';
+                                break;
+                            case 'room_booking':
+                                this.activeMenu = '4';
+                                break;
+                            case 'booking':
+                                this.activeMenu = '5';
+                                break;
+                            case 'my_bookings':
+                                this.activeMenu = '6';
+                                break;
+                            case 'profile':
+                                this.activeMenu = '7';
+                                break;
+                        }
+
+                        // 更新当前页面
+                        this.currentPage = page;
+
+                        // 如果是首页，加载首页数据
+                        if (page === 'index') {
+                            this.fetchDashboardStats();
+                            this.loadRecentBookings();
+                        }
+                    },
+                    handleLogout() {
+                        this.$confirm('确认退出登录吗？', '提示', {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }).then(() => {
+                            layoutTools.logout().then(() => {
+                                this.$message({
+                                    type: 'success',
+                                    message: '退出登录成功'
+                                });
+                            });
+                        }).catch(() => {
+                            // 取消退出，不做任何操作
+                        });
+                    },
+                    getStatusType(status) {
+                        const types = {
+                            'PENDING': 'warning',
+                            'CONFIRMED': 'primary',
+                            'CHECKED_IN': 'success',
+                            'COMPLETED': 'info',
+                            'CANCELLED': 'danger'
+                        };
+                        return types[status] || 'info';
+                    },
+                    getStatusText(status) {
+                        const texts = {
+                            'PENDING': '待确认',
+                            'CONFIRMED': '已确认',
+                            'CHECKED_IN': '已入住',
+                            'COMPLETED': '已完成',
+                            'CANCELLED': '已取消'
+                        };
+                        return texts[status] || '未知';
+                    }
+                },
+                watch: {
+                    // 监听菜单变化
+                    '$route'(to) {
+                        const path = to.path;
+                        switch(path) {
+                            case '/index':
+                                this.goToPage('index');
+                                break;
+                            case '/room':
+                                this.goToPage('room');
+                                break;
+                            case '/customer':
+                                this.goToPage('customer');
+                                break;
+                            case '/booking':
+                                this.goToPage('room_booking');
+                                break;
+                        }
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
